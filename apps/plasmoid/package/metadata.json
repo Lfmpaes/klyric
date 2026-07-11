@@ -1,0 +1,15 @@
+{
+  "KPlugin": {
+    "Authors": [{ "Email": "", "Name": "Luiz Paes" }],
+    "Category": "Multimedia",
+    "Description": "Displays Cider's active synchronized lyric line.",
+    "Icon": "audio-x-generic",
+    "Id": "dev.luizpaes.klyric",
+    "License": "MIT",
+    "Name": "KLyric",
+    "Version": "0.1.0",
+    "Website": ""
+  },
+  "KPackageStructure": "Plasma/Applet",
+  "X-Plasma-API-Minimum-Version": "6.0"
+}
