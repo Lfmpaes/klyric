@@ -9,7 +9,7 @@ As of 2026-07-11, the workspace has a usable local git repository and the `main`
 | 2 — Protocol package | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 3 — Bridge MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 4 — Cider plugin MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
-| 5 — Plasma widget MVP | pending | GPT-5.6 Terra | High | — |
+| 5 — Plasma widget MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 6 — Integration hardening | pending | GPT-5.6 Sol | High | — |
 | 7 — Packaging and installation | pending | GPT-5.6 Terra | Medium | — |
 | 8 — Release readiness | pending | GPT-5.6 Sol | High | — |
@@ -309,3 +309,64 @@ remains: its DOM lyrics require the Lyrics view to remain open.
 Phase 4 is complete. Phase 5 is next at task 5.1; it has not been started.
 The Phase 4 implementation commit is `1d79324`
 (`feat(cider-plugin): publish plugin state to bridge`).
+
+## Phase 5 journal
+
+Started 2026-07-11 at task 5.1. The persistent checkpoint, Phase 4 journal,
+implementation plan, recent commits, and clean `main` worktree agree. This
+session is limited to the Plasma 6 widget MVP: package structure, bridge
+WebSocket client, safe envelope handling, representations, configuration,
+accessibility, transitions, and widget-specific validation. Packaging and
+broad cross-component hardening remain out of scope.
+
+Phase 5 completed 2026-07-11. The plasmoid now has valid Plasma 6 metadata,
+the `Plasma/Applet` package structure, KConfig-backed connection, appearance,
+content, and diagnostic settings, and a Kirigami configuration page that warns
+against non-loopback bridge hosts. The `view-media-lyrics` icon was verified in
+the installed Breeze icon theme.
+
+The QML root owns a `QtWebSockets.WebSocket` client for `/v1/events`. It sends
+the v1 plasmoid hello after opening, requires the server hello before state,
+returns application-level pings with pongs, ignores unknown additive message
+types, identifies incompatible protocol versions, and reconnects with jittered
+backoff from 500 ms to a 30-second maximum. The JavaScript protocol helper
+size-checks and validates all state and server-envelope fields before QML state
+is updated; malformed data cannot directly bind into display properties.
+
+The compact representation displays an elided current line in horizontal
+panels with tooltip details, a theme-aware optional status badge, configurable
+width, line count, alignment, icon, and font weight. Vertical panels default to
+an accessible icon-first view and expose text only when explicitly enabled.
+The popup shows track metadata, previous/current/next context, bridge status,
+and optional diagnostic source and update-age information. Fallback behavior
+covers paused track metadata, stopped state, instrumental text, unavailable
+lyrics, waiting for Cider, and disconnected bridge; a configurable stop delay
+retains the preceding state briefly. All visible source strings use `i18n()`;
+the layout uses Kirigami units and theme colors, preserves Unicode, and sets
+accessible names/descriptions. Text transition behavior is optional and never
+loops while the text is unchanged.
+
+Widget fixture tests execute the QML JavaScript helpers against the shared
+protocol fixtures. They accept every valid bridge envelope, reject malformed
+and incompatible messages, preserve Unicode within protocol bounds, and cover
+the display fallback priority. Final validation on 2026-07-11 passed:
+
+- `bun run format`: PASS
+- `bun run lint`: PASS
+- `bun run typecheck`: PASS
+- `bun run test`: PASS — 50 tests, 0 failures
+- `bun run build`: PASS
+- `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`: PASS
+- `kpackagetool6 --type Plasma/Applet --show apps/plasmoid/package`: PASS
+- `plasmawindowed dev.luizpaes.klyric`: PASS — widget remained loaded through a 10-second timeout after package upgrade
+- `plasmoidviewer -a apps/plasmoid/package -l topedge -f horizontal`: NOT RUN — `plasmoidviewer` is not installed in this environment
+- `git diff --check`: PASS
+
+The bridge integration tests need temporary local loopback ports and therefore
+fail in the restricted sandbox with `EADDRINUSE`; the full suite was rerun with
+normal local loopback access and passed. The Phase 5 implementation commits
+are `57b16ea` (`feat(plasmoid): add Plasma widget MVP`) and `2514c02`
+(`fix(plasmoid): animate lyric text changes`). Manual live validation against
+Cider remains part of Phase 6, alongside end-to-end recovery and
+visual scenario coverage. Phase 5 is complete. Phase 6 is next at task 6.1;
+use GPT-5.6 Sol with High reasoning and do not start automatically.

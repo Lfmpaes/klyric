@@ -23,17 +23,17 @@ When documentation and repository state disagree, inspect the implementation and
 
 > **The agent must update this section whenever work starts, a task is completed, a blocker is discovered, validation changes, or a phase ends.**
 
-- **Current phase:** Phase 5 — Plasma widget MVP
+- **Current phase:** Phase 6 — Integration hardening
 - **Phase status:** `pending`
-- **Current task:** 5.1 — Create valid Plasma 6 metadata and package structure
-- **Recommended model:** GPT-5.6 Terra
+- **Current task:** 6.1 — Execute and document the full end-to-end scenario matrix
+- **Recommended model:** GPT-5.6 Sol
 - **Reasoning:** High
-- **Last completed task:** Phase 4 complete — Cider plugin MVP
-- **Last verified commit:** `1d79324` — feat(cider-plugin): publish plugin state to bridge
-- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (46 pass), `bun run build`, and `git diff --check` passed on 2026-07-11. The bridge integration tests were rerun with normal local loopback access because restricted-sandbox port binds fail.
+- **Last completed task:** Phase 5 complete — Plasma widget MVP
+- **Last verified commit:** `2514c02` — fix(plasmoid): animate lyric text changes
+- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (50 pass), `bun run build`, `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`, `kpackagetool6 --type Plasma/Applet --show apps/plasmoid/package`, `plasmawindowed dev.luizpaes.klyric` (10-second smoke test), and `git diff --check` passed on 2026-07-11. Bridge integration tests were rerun with normal local loopback access because restricted-sandbox port binds fail.
 - **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
-- **Next exact action:** Begin Phase 5 at task 5.1 by validating the Plasma 6 package metadata and structure; do not start automatically.
-- **Last updated:** 2026-07-11 — Phase 4 completed with event-driven transition handling, loopback bridge publication, queue/retry/heartbeat behavior, settings, redacted diagnostics, and unit coverage. Cider runtime validation remains manual because Cider was not running with remote debugging.
+- **Next exact action:** Begin Phase 6 at task 6.1 by executing the documented end-to-end scenario matrix; do not start automatically.
+- **Last updated:** 2026-07-11 — Phase 5 completed with a Plasma 6 package, validated bridge WebSocket client, fixture coverage, panel and popup representations, configuration, accessibility, and runtime smoke validation.
 
 Allowed phase statuses:
 
@@ -150,18 +150,18 @@ Allowed phase statuses:
 **Model:** GPT-5.6 Terra — High  
 **Scope:** Plasma 6 widget and widget-specific tests only. Do not begin packaging or broad integration hardening.
 
-- [ ] **5.1** Create valid Plasma 6 metadata and package structure.
-- [ ] **5.2** Implement the QML WebSocket client and protocol handshake.
-- [ ] **5.3** Implement message validation, cached state, ping/pong, and reconnection backoff.
-- [ ] **5.4** Implement the compact horizontal-panel representation.
-- [ ] **5.5** Implement safe vertical-panel behavior.
-- [ ] **5.6** Implement the popup with track and adjacent-line context.
-- [ ] **5.7** Implement fallback priority for paused, stopped, instrumental, unavailable, and disconnected states.
-- [ ] **5.8** Implement connection, appearance, content, and diagnostic settings.
-- [ ] **5.9** Add `i18n()`, accessibility, theme awareness, high-DPI, RTL, and Unicode handling.
-- [ ] **5.10** Add optional subtle transitions without continuous animation.
-- [ ] **5.11** Run `qmllint`, fixture tests, and available `plasmoidviewer` checks.
-- [ ] **Phase 5 complete** — All widget exit criteria and checks pass.
+- [x] **5.1** Create valid Plasma 6 metadata and package structure.
+- [x] **5.2** Implement the QML WebSocket client and protocol handshake.
+- [x] **5.3** Implement message validation, cached state, ping/pong, and reconnection backoff.
+- [x] **5.4** Implement the compact horizontal-panel representation.
+- [x] **5.5** Implement safe vertical-panel behavior.
+- [x] **5.6** Implement the popup with track and adjacent-line context.
+- [x] **5.7** Implement fallback priority for paused, stopped, instrumental, unavailable, and disconnected states.
+- [x] **5.8** Implement connection, appearance, content, and diagnostic settings.
+- [x] **5.9** Add `i18n()`, accessibility, theme awareness, high-DPI, RTL, and Unicode handling.
+- [x] **5.10** Add optional subtle transitions without continuous animation.
+- [x] **5.11** Run `qmllint`, fixture tests, and available `plasmoidviewer` checks.
+- [x] **Phase 5 complete** — All widget exit criteria and checks pass.
 
 ### Phase 6 — Integration hardening
 
