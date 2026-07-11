@@ -9,12 +9,16 @@ export class LyricsSourceFactory {
 
   constructor(private readonly sources: readonly LyricsSource[]) {}
 
-  async startBest(context: LyricsSourceContext): Promise<LyricsSource | null> {
+  async startBest(
+    context: LyricsSourceContext,
+    excluded: ReadonlySet<LyricsSource["kind"]> = new Set(),
+  ): Promise<LyricsSource | null> {
     await this.stop();
     const candidates = [...this.sources].sort(
       (left, right) => right.confidence - left.confidence,
     );
     for (const source of candidates) {
+      if (excluded.has(source.kind)) continue;
       try {
         if (!(await source.canStart())) continue;
         await source.start(context);
@@ -32,6 +36,13 @@ export class LyricsSourceFactory {
       }
     }
     return null;
+  }
+
+  async startFallback(
+    context: LyricsSourceContext,
+    failed: LyricsSource,
+  ): Promise<LyricsSource | null> {
+    return this.startBest(context, new Set([failed.kind]));
   }
 
   async stop(): Promise<void> {

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@klyric/protocol": "workspace:*"
+  },
   "scripts": {
     "build": "bun run typecheck && bun build src/main.ts --outdir dist --entry-naming plugin.js --format esm",
     "dev": "bun run typecheck",

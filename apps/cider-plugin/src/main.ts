@@ -1,3 +1,4 @@
+import { KLyricPlugin } from "./application/KLyricPlugin";
 import { runCapabilityInspection } from "./diagnostics/CapabilityInspectionTool";
 
 export { runCapabilityInspection };
@@ -19,6 +20,17 @@ interface CiderPluginContext {
   version: string;
 }
 
+const runtimeKey = Symbol.for("dev.luizpaes.klyric.runtime");
+
+interface PluginRuntime {
+  instance?: KLyricPlugin;
+  setup?: Promise<void>;
+}
+
+type PluginHost = typeof globalThis & {
+  [key: symbol]: PluginRuntime | undefined;
+};
+
 const plugin: CiderPluginContext = {
   author: "Luiz Paes",
   ce_prefix: "klyric",
@@ -34,9 +46,25 @@ const plugin: CiderPluginContext = {
   pluginKitVersion: "4",
   repo: "",
   setup() {
-    console.info("[KLyric research] Redacted Cider capability report", {
+    const host = globalThis as PluginHost;
+    const runtime = host[runtimeKey] ?? {};
+    host[runtimeKey] = runtime;
+    console.info("[KLyric] Redacted Cider capability report", {
       ...runCapabilityInspection(),
       note: "Capability names only; no lyric text or host state is serialized.",
+    });
+    runtime.setup = (async () => {
+      await runtime.instance?.teardown();
+      const instance = new KLyricPlugin({
+        onError: (error) => console.warn("[KLyric] observer error", error.name),
+      });
+      runtime.instance = instance;
+      await instance.setup();
+    })().catch((error: unknown) => {
+      console.warn(
+        "[KLyric] setup failed",
+        error instanceof Error ? error.name : "UnknownError",
+      );
     });
   },
   version: "0.1.0",

@@ -8,7 +8,7 @@ As of 2026-07-11, the workspace has a usable local git repository and the `main`
 | 1 — Lyric extraction spike | complete | GPT-5.6 Sol | High | 2026-07-10 |
 | 2 — Protocol package | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 3 — Bridge MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
-| 4 — Cider plugin MVP | pending | GPT-5.6 Terra | High | — |
+| 4 — Cider plugin MVP | in_progress | GPT-5.6 Terra | High | — |
 | 5 — Plasma widget MVP | pending | GPT-5.6 Terra | High | — |
 | 6 — Integration hardening | pending | GPT-5.6 Sol | High | — |
 | 7 — Packaging and installation | pending | GPT-5.6 Terra | Medium | — |
@@ -196,3 +196,58 @@ validation applies to this bridge-only phase. Phase 3 implementation is
 Phase 3 is complete. Phase 4 is next at task 4.1: implement deterministic
 plugin setup, teardown, and hot-reload cleanup. Keep GPT-5.6 Terra with High
 reasoning.
+
+## Phase 4 journal
+
+Started 2026-07-11 at task 4.1. The persistent checkpoint, Phase 3 journal,
+implementation plan, clean `main` worktree, and existing extraction adapters
+agree. This implementation session is limited to tasks 4.1 through 4.4:
+deterministic lifecycle cleanup, normalized playback observation, selected
+lyrics-source integration, and the plugin state machine. Bridge publication,
+settings, diagnostics expansion, and later Phase 4 behavior remain out of
+scope.
+
+Tasks 4.1 through 4.4 completed 2026-07-11. `KLyricPlugin` now owns every
+observer and source through a reverse-order, idempotent cleanup registry.
+Plugin setup replaces a prior global instance before starting a new one, so a
+hot reload cannot retain duplicate playback or lyric observers. Teardown aborts
+subscriptions, stops the active lyric source, and disconnects playback
+observation without creating or retaining plugin DOM.
+
+`PlaybackSource` confines Cider-specific reads to `src/cider/`: it normalizes
+the guarded MusicKit now-playing item and playback position, observes audio
+events, and uses a single document observer solely to attach to a replaced
+audio element. The default lyrics factory follows the Phase 1 priority:
+capability-gated PluginKit public API, validated internal store, complete
+PluginKit timeline, then the observed DOM adapter. A failed adapter is stopped
+and the next compatible source is tried; no compatible source remains an
+explicit unavailable state.
+
+`PluginStateMachine` maps those observations to versioned protocol states and
+the required phases, including connecting, idle, loading, playing with or
+without lyrics, paused, stopped, source error, bridge error, and disabled.
+It produces ordered session-local state snapshots, selects adjacent lyric
+context, and invalidates lyric data when a new track identity is observed.
+Publication and bridge connection behavior are deliberately deferred to the
+later Phase 4 tasks.
+
+Added plugin unit coverage for reverse-order idempotent cleanup, repeat setup,
+adapter fallback after failure, playback metadata normalization, protocol state
+normalization, and track-change lyric invalidation. Final validation on
+2026-07-11 passed:
+
+- `bun run format`: PASS
+- `bun run lint`: PASS
+- `bun run typecheck`: PASS
+- `bun run test`: PASS — 36 tests, 0 failures
+- `bun run build`: PASS
+- `git diff --check`: PASS
+
+The restricted execution sandbox blocks bridge integration-test loopback port
+binds with `EADDRINUSE`; the required full test suite was rerun outside that
+sandbox and passed. Manual Cider validation is still pending. The existing
+Cider 3.1.8 limitation remains: DOM lyrics require the Lyrics view to stay
+open; minimized Cider works only while that view remains open.
+
+Phase 4 remains in progress. Task 4.5 is next: implement track-change, seek,
+pause, resume, stop, and stale-line handling using the current observers.
