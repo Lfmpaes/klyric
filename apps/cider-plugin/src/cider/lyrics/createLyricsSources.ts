@@ -1,3 +1,4 @@
+import type { SourcePreference } from "../../settings/PluginSettings";
 import { DomLyricsSource } from "./DomLyricsSource";
 import { InternalStoreLyricsSource } from "./InternalStoreLyricsSource";
 import type { LyricsSource } from "./LyricsSource";
@@ -14,6 +15,7 @@ import {
 export function createLyricsSources(
   root: unknown,
   documentRoot: Document,
+  preference: SourcePreference = "auto",
 ): readonly LyricsSource[] {
   const sources: LyricsSource[] = [
     new PublicApiLyricsSource(findPublicLyricsApi(root)),
@@ -22,7 +24,9 @@ export function createLyricsSources(
   const timeline = findTimelineProvider(root);
   if (timeline !== undefined) sources.push(new TimelineLyricsSource(timeline));
   sources.push(new DomLyricsSource(documentRoot));
-  return sources;
+  return preference === "auto"
+    ? sources
+    : sources.filter((source) => source.kind === preference);
 }
 
 function findPublicLyricsApi(root: unknown): PublicLyricsApi | undefined {

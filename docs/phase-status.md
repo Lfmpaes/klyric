@@ -8,7 +8,7 @@ As of 2026-07-11, the workspace has a usable local git repository and the `main`
 | 1 — Lyric extraction spike | complete | GPT-5.6 Sol | High | 2026-07-10 |
 | 2 — Protocol package | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 3 — Bridge MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
-| 4 — Cider plugin MVP | in_progress | GPT-5.6 Terra | High | — |
+| 4 — Cider plugin MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 5 — Plasma widget MVP | pending | GPT-5.6 Terra | High | — |
 | 6 — Integration hardening | pending | GPT-5.6 Sol | High | — |
 | 7 — Packaging and installation | pending | GPT-5.6 Terra | Medium | — |
@@ -253,3 +253,57 @@ Phase 4 remains in progress. Task 4.5 is next: implement track-change, seek,
 pause, resume, stop, and stale-line handling using the current observers.
 The implementation commit for tasks 4.1–4.4 is `e11a8ea`
 (`feat(cider-plugin): add lifecycle and state machine`).
+
+Phase 4 resumed 2026-07-11 at task 4.5 after the clean `main` worktree,
+persistent checkpoint, journal, implementation plan, and recent commits were
+reconciled. The remaining work stays limited to the Cider plugin MVP.
+
+Phase 4 completed 2026-07-11. Playback transitions now invalidate incompatible
+lyric state immediately: track changes enter `loading-track`, seeks clear an
+old active line and mark state stale until a fresh snapshot arrives, pauses
+retain the displayed line, and stopped playback clears it. An untagged DOM
+snapshot received immediately after a track replacement is ignored once, which
+prevents the previous track's rendered line from being published while the new
+lyrics view rebuilds.
+
+The plugin now publishes only to a validated loopback bridge through an
+authenticated `BridgeClient`; it uses `credentials: omit`, never logs the
+publisher token, and recognizes authentication, network, server, and response
+validation failures. `PublishQueue` serializes writes, coalesces bursts to the
+latest pending state, deduplicates display-equivalent updates, sends an ordered
+five-second playing heartbeat, retries transient failures with bounded
+exponential backoff, and stops retrying authentication failures. Shutdown
+cancels all pending work and attempts a best-effort authenticated clear.
+
+`PluginSettingsStore` persistently validates the enabled state, loopback host,
+port, publisher token, lyric-source override, heartbeat interval, and
+diagnostic logging preference. Its exported connection test calls only the
+bridge health endpoint. `Diagnostics` exposes only capability names and safe
+operational metadata; it excludes token values, lyric text, account data, and
+host-store contents.
+
+The plugin test suite now uses the sanitized Phase 1 fixtures and covers source
+fallback, track replacement, seek staleness, pause/resume and stop handling,
+cleanup across reloads, bridge downtime, authenticated request construction,
+queue ordering/deduplication/retry behavior, settings validation, and redacted
+diagnostics. All Phase 4 tasks are complete. Final validation on 2026-07-11:
+
+- `bun run format`: PASS
+- `bun run lint`: PASS
+- `bun run typecheck`: PASS
+- `bun run test`: PASS — 46 tests, 0 failures
+- `bun run build`: PASS
+- `git diff --check`: PASS
+
+Bridge integration tests cannot bind loopback ports inside the restricted
+sandbox, so the full suite was rerun with normal local loopback access and
+passed. The built plugin was copied to Cider's local plugin directory, but
+`bun run --cwd apps/cider-plugin inspect:cider` is `NOT RUN` successfully:
+Cider was not running and `127.0.0.1:9222` refused the remote-debugging
+connection. Manual verification still required: start Cider with remote
+debugging, configure the bridge token through the exported plugin settings
+surface, then verify track change, seek, pause/resume, stop, reload, and bridge
+downtime against a live lyrics view. The existing Cider 3.1.8 limitation
+remains: its DOM lyrics require the Lyrics view to remain open.
+
+Phase 4 is complete. Phase 5 is next at task 5.1; it has not been started.
