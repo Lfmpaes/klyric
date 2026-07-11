@@ -23,17 +23,17 @@ When documentation and repository state disagree, inspect the implementation and
 
 > **The agent must update this section whenever work starts, a task is completed, a blocker is discovered, validation changes, or a phase ends.**
 
-- **Current phase:** Phase 3 — Bridge MVP
+- **Current phase:** Phase 4 — Cider plugin MVP
 - **Phase status:** `pending`
-- **Current task:** 3.1 — Implement configuration and loopback-only host validation
+- **Current task:** 4.1 — Implement deterministic plugin setup, teardown, and hot-reload cleanup
 - **Recommended model:** GPT-5.6 Terra
 - **Reasoning:** High
-- **Last completed task:** Phase 2 complete — Protocol package
-- **Last verified commit:** `971f53f` — feat(protocol): define validated state schema
-- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (21 pass), and `bun run build` passed on 2026-07-11.
-- **Known blockers:** GitHub remote access is unavailable from this environment: HTTPS returns `404` for `https://github.com/Lfmpaes/klyric` and SSH returns `Permission denied (publickey)`, so the configured upstream cannot be resolved here. Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
-- **Next exact action:** Start Phase 3 at task 3.1 by implementing bridge configuration and loopback-only host validation.
-- **Last updated:** 2026-07-11 — Phase 2 completed with versioned types, runtime validation, fixtures, browser/Bun-safe exports, documentation, and all required checks passing; GitHub remote access remains blocked by authentication.
+- **Last completed task:** Phase 3 complete — Bridge MVP
+- **Last verified commit:** `9855974` — feat(bridge): add authenticated loopback service
+- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (30 pass), and `bun run build` passed on 2026-07-11.
+- **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
+- **Next exact action:** Start Phase 4 at task 4.1 by implementing deterministic plugin setup, teardown, and hot-reload cleanup.
+- **Last updated:** 2026-07-11 — Phase 3 completed with a loopback-only authenticated Bun bridge, memory-only state lifecycle, WebSocket broadcasts, CLI, tests, and all required checks passing. The GitHub remote is reachable and `main` tracks `origin/main`.
 
 Allowed phase statuses:
 
@@ -114,18 +114,18 @@ Allowed phase statuses:
 **Model:** GPT-5.6 Terra — High  
 **Scope:** Bridge and bridge tests only. Use protocol fixtures; do not implement the production Cider publisher or Plasma UI.
 
-- [ ] **3.1** Implement configuration and loopback-only host validation.
-- [ ] **3.2** Implement secure publisher-token creation, storage, display, and rotation.
-- [ ] **3.3** Implement authenticated `POST /v1/state` and `DELETE /v1/state`.
-- [ ] **3.4** Implement `GET /v1/state` and `GET /health`.
-- [ ] **3.5** Implement the in-memory state store, sequence handling, and duplicate suppression.
-- [ ] **3.6** Implement WebSocket handshake, cached-state delivery, broadcasts, ping/pong, and client limits.
-- [ ] **3.7** Implement state expiry and publisher heartbeat behavior.
-- [ ] **3.8** Implement rate limiting, payload limits, and safe structured logging.
-- [ ] **3.9** Implement the bridge CLI and graceful shutdown.
-- [ ] **3.10** Add bridge unit and process-level integration tests.
-- [ ] **3.11** Verify a mock publisher and client can complete the full state lifecycle.
-- [ ] **Phase 3 complete** — All bridge exit criteria and checks pass.
+- [x] **3.1** Implement configuration and loopback-only host validation.
+- [x] **3.2** Implement secure publisher-token creation, storage, display, and rotation.
+- [x] **3.3** Implement authenticated `POST /v1/state` and `DELETE /v1/state`.
+- [x] **3.4** Implement `GET /v1/state` and `GET /health`.
+- [x] **3.5** Implement the in-memory state store, sequence handling, and duplicate suppression.
+- [x] **3.6** Implement WebSocket handshake, cached-state delivery, broadcasts, ping/pong, and client limits.
+- [x] **3.7** Implement state expiry and publisher heartbeat behavior.
+- [x] **3.8** Implement rate limiting, payload limits, and safe structured logging.
+- [x] **3.9** Implement the bridge CLI and graceful shutdown.
+- [x] **3.10** Add bridge unit and process-level integration tests.
+- [x] **3.11** Verify a mock publisher and client can complete the full state lifecycle.
+- [x] **Phase 3 complete** — All bridge exit criteria and checks pass.
 
 ### Phase 4 — Cider plugin MVP
 
