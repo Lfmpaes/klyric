@@ -1,0 +1,12 @@
+{
+  "name": "@klyric/test-utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "build": "bun run typecheck",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test"
+  }
+}

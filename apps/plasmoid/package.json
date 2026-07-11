@@ -1,0 +1,10 @@
+{
+  "name": "@klyric/plasmoid",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "bun run typecheck",
+    "typecheck": "bun --eval 'console.info(\"QML type validation is provided by qmllint.\")'",
+    "test": "bun test"
+  }
+}

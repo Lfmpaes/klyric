@@ -1,0 +1,16 @@
+{
+  "name": "@klyric/bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "klyric-bridge": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "bun run typecheck",
+    "dev": "bun run src/index.ts",
+    "start": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test"
+  }
+}
