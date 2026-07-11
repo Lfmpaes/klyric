@@ -9,6 +9,9 @@ bridge keeps the latest state only in memory and broadcasts it to one or more
 Plasma widgets over WebSocket. The shared protocol package defines the boundary
 between those components.
 
+Bridge configuration, token management, and its local HTTP/WebSocket API are
+documented in [docs/bridge.md](docs/bridge.md).
+
 ## Prerequisites
 
 - Bun 1.3.14 or newer

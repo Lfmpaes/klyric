@@ -6,6 +6,9 @@
   "bin": {
     "klyric-bridge": "./src/index.ts"
   },
+  "dependencies": {
+    "@klyric/protocol": "workspace:*"
+  },
   "scripts": {
     "build": "bun run typecheck",
     "dev": "bun run src/index.ts",
