@@ -11,11 +11,23 @@ export interface CiderCapabilities {
 
 export interface RedactedCapabilityReport {
   schemaVersion: 1;
+  descriptorId:
+    | "plugin-kit-public-api"
+    | "candidate-internal-store"
+    | "plugin-kit-timeline"
+    | "cider-3.1.8-dom"
+    | "unsupported";
   capabilities: CiderCapabilities;
   detectedPaths: readonly string[];
 }
 
-const PUBLIC_API_PATHS = ["lyrics", "getLyrics", "appleMusic.lyrics"] as const;
+const PUBLIC_API_PATHS = [
+  "PluginKit.lyrics",
+  "lyrics",
+  "getLyrics",
+  "appleMusic.lyrics",
+] as const;
+const TIMELINE_PATHS = ["PluginKit.lyricsTimeline"] as const;
 const INTERNAL_STORE_PATHS = [
   "__PLUGINSYS__.lyrics",
   "__PLUGINSYS__.stores.lyrics",
@@ -28,6 +40,7 @@ export function inspectCiderCapabilities(
 ): RedactedCapabilityReport {
   const detectedPaths: string[] = [];
   const publicApi = firstDetected(root, PUBLIC_API_PATHS, detectedPaths);
+  const timeline = firstDetected(root, TIMELINE_PATHS, detectedPaths);
   const internalStore = firstDetected(
     root,
     INTERNAL_STORE_PATHS,
@@ -43,21 +56,44 @@ export function inspectCiderCapabilities(
 
   return {
     schemaVersion: 1,
+    descriptorId: isPublicLyricsApi(publicApi)
+      ? "plugin-kit-public-api"
+      : store !== undefined
+        ? "candidate-internal-store"
+        : isTimelineProvider(timeline)
+          ? "plugin-kit-timeline"
+          : lyricContainer !== null
+            ? "cider-3.1.8-dom"
+            : "unsupported",
     capabilities: {
-      publicLyricsApi: publicApi !== undefined,
+      publicLyricsApi: isPublicLyricsApi(publicApi),
       internalLyricsStore: store !== undefined,
       storeSubscription:
         isRecord(store) &&
         (typeof store.$subscribe === "function" ||
           typeof store.subscribe === "function"),
       lyricDom: lyricContainer !== null,
-      timedLyricsAvailable: lines.some(
-        (line) => line.startTimeMs !== undefined,
-      ),
+      timedLyricsAvailable:
+        isTimelineProvider(timeline) ||
+        lines.some((line) => line.startTimeMs !== undefined),
       playbackAudioElement: audio !== null,
     },
     detectedPaths: [...new Set(detectedPaths)].sort(),
   };
+}
+
+function isTimelineProvider(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.getLines === "function" &&
+    typeof value.getPositionMs === "function" &&
+    typeof value.isPlaying === "function" &&
+    typeof value.subscribe === "function"
+  );
+}
+
+function isPublicLyricsApi(value: unknown): boolean {
+  return isRecord(value) && typeof value.getLyrics === "function";
 }
 
 export function findLyricContainer(documentRoot?: Document): Element | null {
@@ -93,14 +129,32 @@ function readPath(root: unknown, path: string): unknown {
 
 function findLyricsStore(candidate: unknown): unknown {
   if (!isRecord(candidate)) return undefined;
-  if (readCandidateLines(candidate).length > 0) return candidate;
+  if (isCompatibleLyricsStore(candidate)) return candidate;
 
   const stores = candidate._s;
-  if (!(stores instanceof Map)) return candidate;
+  if (!(stores instanceof Map)) return undefined;
   for (const [name, store] of stores) {
-    if (typeof name === "string" && /lyric/i.test(name)) return store;
+    if (
+      typeof name === "string" &&
+      /lyric/i.test(name) &&
+      isRecord(store) &&
+      isCompatibleLyricsStore(store)
+    )
+      return store;
   }
   return undefined;
+}
+
+function isCompatibleLyricsStore(store: Record<string, unknown>): boolean {
+  const subscribable =
+    typeof store.$subscribe === "function" ||
+    typeof store.subscribe === "function";
+  const hasLineCollection = [
+    store.lines,
+    store.lyrics,
+    store.currentLyrics,
+  ].some(Array.isArray);
+  return subscribable && hasLineCollection;
 }
 
 function readCandidateLines(

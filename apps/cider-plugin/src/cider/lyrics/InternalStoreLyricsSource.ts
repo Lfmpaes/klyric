@@ -120,7 +120,7 @@ function resolvePiniaLyricsStore(root: unknown): SubscribableStore | undefined {
     : isRecord(pluginSystem.stores) && isRecord(pluginSystem.stores.lyrics)
       ? pluginSystem.stores.lyrics
       : undefined;
-  if (direct !== undefined) return direct;
+  if (direct !== undefined && isCompatibleStore(direct)) return direct;
 
   const app = isRecord(root.app) ? root.app : undefined;
   const pinia =
@@ -128,9 +128,26 @@ function resolvePiniaLyricsStore(root: unknown): SubscribableStore | undefined {
   const stores = pinia?._s;
   if (!(stores instanceof Map)) return undefined;
   for (const [name, store] of stores) {
-    if (typeof name === "string" && /lyric/i.test(name) && isRecord(store)) {
+    if (
+      typeof name === "string" &&
+      /lyric/i.test(name) &&
+      isRecord(store) &&
+      isCompatibleStore(store)
+    ) {
       return store;
     }
   }
   return undefined;
+}
+
+function isCompatibleStore(store: SubscribableStore): boolean {
+  const subscribable =
+    typeof store.$subscribe === "function" ||
+    typeof store.subscribe === "function";
+  const hasLineCollection = [
+    store.lines,
+    store.lyrics,
+    store.currentLyrics,
+  ].some(Array.isArray);
+  return subscribable && hasLineCollection;
 }

@@ -120,6 +120,45 @@ describe("publication queue", () => {
     await queue.stop();
   });
 
+  test("does not overwrite a newer state when an in-flight request fails", async () => {
+    const sent: number[] = [];
+    let rejectFirst: ((error: Error) => void) | undefined;
+    let retry: (() => void) | undefined;
+    const queue = new PublishQueue(
+      {
+        publish(next) {
+          sent.push(next.sequence);
+          if (next.sequence !== 1) return Promise.resolve();
+          return new Promise<void>((_resolve, reject) => {
+            rejectFirst = reject;
+          });
+        },
+        async clear() {},
+      },
+      {
+        clock: {
+          setTimeout(callback) {
+            retry = callback;
+            return 1 as unknown as ReturnType<typeof setTimeout>;
+          },
+          clearTimeout() {
+            retry = undefined;
+          },
+        },
+      },
+    );
+
+    queue.enqueue(state(1));
+    await settled();
+    queue.enqueue(state(2));
+    rejectFirst?.(new BridgeClientError("network", "offline"));
+    await settled();
+    retry?.();
+    await settled();
+    expect(sent).toEqual([1, 2]);
+    await queue.stop();
+  });
+
   test("does not retry authentication failures", async () => {
     let retryScheduled = false;
     const queue = new PublishQueue(
@@ -172,6 +211,7 @@ describe("settings and diagnostics", () => {
   test("reports only redacted capability and operational metadata", () => {
     const diagnostics = new Diagnostics("0.1.0", {
       schemaVersion: 1,
+      descriptorId: "cider-3.1.8-dom",
       capabilities: {
         publicLyricsApi: false,
         internalLyricsStore: false,

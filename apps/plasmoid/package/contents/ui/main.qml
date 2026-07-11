@@ -234,6 +234,14 @@ PlasmoidItem {
         }
     }
 
+    Connections {
+        target: Qt.application
+        function onStateChanged() {
+            if (Qt.application.state === Qt.ApplicationActive)
+                root.connectToBridge()
+        }
+    }
+
     Component.onCompleted: {
         updateDisplayText()
         connectToBridge()

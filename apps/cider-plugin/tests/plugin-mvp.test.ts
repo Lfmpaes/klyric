@@ -273,6 +273,109 @@ describe("plugin state machine", () => {
       stale: false,
     });
   });
+
+  test("handles repeated lines, pause/resume, rapid seeks, skips, replay, and no-lyrics states", () => {
+    const states: RawState[] = [];
+    const machine = new PluginStateMachine({
+      sessionId: "scenario-session",
+      onState: (_, state) => states.push(state),
+    });
+    const repeated = {
+      source: "dom" as const,
+      lines: [
+        { text: "Repeated", index: 0 },
+        { text: "Repeated", index: 1 },
+      ],
+      currentLine: { text: "Repeated", index: 0 },
+      currentIndex: 0,
+      trackId: "track-a",
+    };
+
+    machine.setConnected(true);
+    machine.setPlayback({
+      status: "playing",
+      track: { id: "track-a" },
+      positionMs: 1_000,
+    });
+    machine.setLyrics(repeated);
+    machine.setLyrics({
+      ...repeated,
+      currentLine: { text: "Repeated", index: 1 },
+      currentIndex: 1,
+    });
+    expect(states.at(-1)?.currentLine?.index).toBe(1);
+
+    machine.setPlayback({
+      status: "paused",
+      track: { id: "track-a" },
+      positionMs: 1_000,
+    });
+    expect(states.at(-1)).toMatchObject({
+      playbackStatus: "paused",
+      currentLine: { index: 1 },
+    });
+    machine.setPlayback({
+      status: "playing",
+      track: { id: "track-a" },
+      positionMs: 1_000,
+    });
+    expect(states.at(-1)?.playbackStatus).toBe("playing");
+
+    machine.setPlayback({
+      status: "playing",
+      track: { id: "track-a" },
+      positionMs: 5_000,
+    });
+    machine.setPlayback({
+      status: "playing",
+      track: { id: "track-a" },
+      positionMs: 9_000,
+    });
+    expect(states.at(-1)).toMatchObject({ currentLine: null, stale: true });
+    machine.setLyrics({
+      ...repeated,
+      currentIndex: 1,
+      currentLine: repeated.lines[1] ?? null,
+    });
+    expect(states.at(-1)).toMatchObject({
+      currentLine: { index: 1 },
+      stale: false,
+    });
+
+    machine.setPlayback({ status: "playing", track: { id: "track-b" } });
+    machine.setPlayback({ status: "playing", track: { id: "track-c" } });
+    machine.setLyrics({ ...repeated, trackId: "track-b" });
+    expect(states.at(-1)).toMatchObject({
+      track: { id: "track-c" },
+      currentLine: null,
+    });
+    machine.setPlayback({ status: "playing", track: { id: "track-a" } });
+    expect(states.at(-1)).toMatchObject({
+      track: { id: "track-a" },
+      currentLine: null,
+      stale: true,
+    });
+
+    machine.setLyrics({
+      source: "dom",
+      lines: [],
+      currentLine: null,
+      currentIndex: null,
+      trackId: "track-a",
+    });
+    expect(states.at(-1)).toMatchObject({
+      lyricsKind: "unavailable",
+      hasLyrics: false,
+    });
+    machine.setLyrics({
+      source: "dom",
+      lines: [{ text: "Instrumental", index: 0, isInstrumental: true }],
+      currentLine: { text: "Instrumental", index: 0, isInstrumental: true },
+      currentIndex: 0,
+      trackId: "track-a",
+    });
+    expect(states.at(-1)?.lyricsKind).toBe("instrumental");
+  });
 });
 
 describe("playback normalization", () => {

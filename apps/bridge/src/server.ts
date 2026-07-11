@@ -113,7 +113,7 @@ export async function startBridge(
   }
 
   async function publish(request: Request): Promise<Response> {
-    if (!tokenStore.matches(bearerToken(request))) {
+    if (!(await tokenStore.matchesActive(bearerToken(request)))) {
       options.logger.warn("publication.unauthorized");
       return error(401, "unauthorized", "A valid publisher token is required.");
     }
@@ -178,8 +178,8 @@ export async function startBridge(
     }
   }
 
-  function clear(request: Request): Response {
-    if (!tokenStore.matches(bearerToken(request))) {
+  async function clear(request: Request): Promise<Response> {
+    if (!(await tokenStore.matchesActive(bearerToken(request)))) {
       options.logger.warn("clear.unauthorized");
       return error(401, "unauthorized", "A valid publisher token is required.");
     }
@@ -214,7 +214,7 @@ export async function startBridge(
       if (url.pathname === "/v1/state" && request.method === "POST")
         return publish(request);
       if (url.pathname === "/v1/state" && request.method === "DELETE")
-        return clear(request);
+        return await clear(request);
       if (url.pathname === "/v1/state" && request.method === "GET") {
         const state = stateStore.current();
         return state === null ? empty(204) : json(state);
@@ -255,8 +255,9 @@ export async function startBridge(
     port,
     stop: () => {
       clearInterval(expiryTimer);
+      const result = stateStore.clear("publisher-disconnected");
+      if (result.kind === "cleared") registry.broadcastCleared(result.reason);
       registry.shutdown();
-      stateStore.clear("publisher-disconnected");
       server.stop(true);
       options.logger.info("bridge.stopped");
     },

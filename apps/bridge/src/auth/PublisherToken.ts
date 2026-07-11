@@ -80,6 +80,12 @@ export class PublisherTokenStore {
     }
   }
 
+  /** Reloads the token so rotation by a separate CLI process is immediate. */
+  public async matchesActive(candidate: string | null): Promise<boolean> {
+    this.currentToken = await this.loadOrCreate();
+    return this.matches(candidate);
+  }
+
   private currentToken = "";
 
   public async initialize(): Promise<void> {

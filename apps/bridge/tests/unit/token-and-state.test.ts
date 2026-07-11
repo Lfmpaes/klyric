@@ -22,6 +22,19 @@ describe("publisher token storage", () => {
     expect(store.matches(first)).toBe(false);
     expect(store.matches(second)).toBe(true);
   });
+
+  test("observes token rotation performed by another CLI process", async () => {
+    const root = join("/tmp", `klyric-token-reload-${crypto.randomUUID()}`);
+    const path = join(root, "publisher-token");
+    const runningStore = new PublisherTokenStore(path);
+    await runningStore.initialize();
+    const first = await runningStore.loadOrCreate();
+    const cliStore = new PublisherTokenStore(path);
+    const second = await cliStore.rotate();
+
+    expect(await runningStore.matchesActive(first)).toBe(false);
+    expect(await runningStore.matchesActive(second)).toBe(true);
+  });
 });
 
 describe("memory-only state store", () => {
