@@ -29,7 +29,7 @@ When documentation and repository state disagree, inspect the implementation and
 - **Recommended model:** GPT-5.6 Terra
 - **Reasoning:** High
 - **Last completed task:** 4.4 — Implement the plugin state machine
-- **Last verified commit:** `uncommitted`
+- **Last verified commit:** `e11a8ea` — feat(cider-plugin): add lifecycle and state machine
 - **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (36 pass), `bun run build`, and `git diff --check` passed on 2026-07-11. The bridge integration tests were rerun with normal local loopback access because restricted-sandbox port binds fail.
 - **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
 - **Next exact action:** Implement task 4.5 by deriving track change, seek, pause, resume, stop, and stale-line behavior from the existing event-driven observers.

@@ -251,3 +251,5 @@ open; minimized Cider works only while that view remains open.
 
 Phase 4 remains in progress. Task 4.5 is next: implement track-change, seek,
 pause, resume, stop, and stale-line handling using the current observers.
+The implementation commit for tasks 4.1–4.4 is `e11a8ea`
+(`feat(cider-plugin): add lifecycle and state machine`).
