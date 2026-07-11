@@ -150,6 +150,28 @@ test("the Plasma runtime wires settings and translations through supported conte
   );
   expect(mainQml).toContain("onStatusChanged: function(status)");
   expect(mainQml).toContain("onErrorStringChanged: function(errorString)");
+  expect(mainQml).toMatch(
+    /status === WebSocket\.Closed[\s\S]*socket\.active = false[\s\S]*root\.scheduleReconnect\(\)/,
+  );
+  expect(mainQml).toContain("verticalPanel: root.verticalPanel");
   expect(formattingJs).not.toContain(".pragma library");
   expect(fullRepresentationQml).not.toContain("Kirigami.Theme.headingFont");
+});
+
+test("the compact representation allocates panel-axis length for opt-in vertical text", () => {
+  const compactQml = readFileSync(
+    resolve(
+      import.meta.dir,
+      "../package/contents/ui/CompactRepresentation.qml",
+    ),
+    "utf8",
+  );
+
+  expect(compactQml).toContain("property bool verticalPanel: false");
+  expect(compactQml).toContain(
+    "Layout.preferredHeight: verticalPanel ? preferredPanelLength : implicitHeight",
+  );
+  expect(compactQml).toContain("rotation: -90");
+  expect(compactQml).toContain("visible: !compact.verticalPanel");
+  expect(compactQml.match(/fontSizeMode: Text\.VerticalFit/g)).toHaveLength(2);
 });

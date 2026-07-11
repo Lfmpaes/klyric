@@ -148,6 +148,7 @@ PlasmoidItem {
         fontWeight: root.configuration.fontWeight
         animationsEnabled: root.configuration.animationsEnabled
         tooltipText: root.tooltipText
+        verticalPanel: root.verticalPanel
     }
 
     fullRepresentation: FullRepresentation {
@@ -214,6 +215,11 @@ PlasmoidItem {
                 stableConnectionTimer.restart()
             } else if (status === WebSocket.Closed) {
                 stableConnectionTimer.stop()
+                // QtWebSockets keeps `active` true after a failed connection.
+                // Clear it before the retry timer fires so assigning true in
+                // connectToBridge() starts a fresh socket instead of becoming
+                // a no-op.
+                socket.active = false
                 if (root.connectionState !== "incompatible")
                     root.connectionState = "disconnected"
                 root.updateDisplayText()
