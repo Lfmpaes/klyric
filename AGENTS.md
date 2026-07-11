@@ -26,16 +26,16 @@ When documentation and repository state disagree, inspect the implementation and
 - **Current phase:** Phase 6 — Integration hardening
 - **Phase status:** `in_progress`
 - **Current task:** 6.1 — Execute and document the full end-to-end scenario matrix
-- **Current validation focus:** 6.8 — Verify that draft PR #1 displays lyric text directly in a real horizontal Plasma panel
+- **Current validation focus:** 6.8 — Verify default icon-only and opt-in text behavior in a real vertical Plasma panel
 - **Recommended model:** GPT-5.6 Sol
 - **Reasoning:** High
 - **Last completed task:** 6.11 — Update compatibility and manual-test documentation
-- **Last verified implementation commit:** `9281dc1` — docs(plasmoid): document taskbar lyric layout
-- **Open pull request:** Draft PR #1 — `fix(plasmoid): show lyric text in horizontal panels`
-- **Last validation:** Previous Phase 6 checks passed on 2026-07-11, and CI passed for the panel-layout branch at `c9fcbfb`. Real horizontal-panel validation remains pending.
-- **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. `plasmoidviewer` is unavailable, and completing real horizontal-panel validation, suspend/resume, Plasma-session restart, real vertical-panel, Breeze Light, and font-extreme checks requires interaction with the active desktop session.
-- **Next exact action:** Install draft PR #1, validate lyric and fallback text directly in a real horizontal Plasma panel using `docs/plasma-panel-layout.md`, record the result in `docs/phase-status.md`, and then continue the remaining Phase 6 scenarios.
-- **Last updated:** 2026-07-11 — Recorded the horizontal-panel sizing fix and pending real-panel validation without changing the implementation checklist structure.
+- **Last verified implementation commit:** `d2224e0` — fix(plasmoid): wire panel runtime context
+- **Open pull request:** None — PR #1 (`fix(plasmoid): show lyric text in horizontal panels`) merged into `main` at `c7d43ab`.
+- **Last validation:** All required checks passed on 2026-07-11 with 60 tests. The final build installed cleanly and displayed fallback, short lyric, bounded long lyric, no-icon text, and cached state after a real PlasmaShell restart in a Plasma 6.7.2 horizontal panel; no KLyric QML runtime warning remained.
+- **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. `plasmoidviewer` is unavailable, and completing suspend/resume, a full Plasma-session restart, a real vertical panel, Breeze Light, font extremes, real 150%/200% compositor scaling, and two-real-widget checks requires further interaction with the active desktop session.
+- **Next exact action:** Move KLyric temporarily into a real vertical panel, validate default icon-only and opt-in text behavior, and restore the current horizontal layout.
+- **Last updated:** 2026-07-11 — Fixed real-panel Plasma 6 runtime wiring, completed horizontal-panel and live PlasmaShell-restart validation, and recorded the remaining Phase 6 visual/session checks.
 
 Allowed phase statuses:
 

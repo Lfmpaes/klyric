@@ -445,3 +445,54 @@ The implementation and automated integration commit is `9ab1f30`
 (`fix(integration): harden recovery and compatibility`). Documentation and
 checkpoint updates are recorded in `dc15731`
 (`docs(phase): record integration hardening matrix`).
+
+Phase 6 resumed later on 2026-07-11 after the horizontal-panel sizing fix was
+merged through PR #1. The clean `main` branch is now at merge commit `c7d43ab`;
+the branch CI evidence is recorded at `c9fcbfb`. The persistent checkpoint
+still described PR #1 as an open draft even though Git showed it merged, and
+this journal had not recorded the later panel-fix work. Both status files were
+reconciled before runtime validation began. The first actionable work remains
+task 6.1, with current focus on task 6.8: upgrade the installed plasmoid and
+verify lyric and fallback text directly in a real horizontal Plasma panel.
+
+The first real-panel load found that the merged width hints were necessary but
+not sufficient: PlasmaShell reported `configuration is not defined`, leaving
+the compact representation without settings and still icon-only. It also
+reported an unavailable shared-script `i18n()` context, invalid heading-font
+assignments, and deprecated implicit WebSocket signal parameters. Commit
+`d2224e0` (`fix(plasmoid): wire panel runtime context`) binds settings through
+`Plasmoid.configuration`, restores the importing QML translation context,
+uses supported label font properties, declares signal parameters explicitly,
+and adds regression coverage for those runtime contracts.
+
+Real horizontal-panel validation now passes on Plasma 6.7.2, Wayland, Breeze
+Dark, a 1920x1200 output at 100% scale, and a 32 px horizontal top panel. The
+installed applet displayed disconnected fallback text and sanitized short
+lyric text directly in the panel. A long line elided within the default 360 px
+maximum and a temporary 200 px maximum, and the text remained visible with the
+music icon disabled. The applet settings were restored to minimum 100 px,
+maximum 360 px, and icon enabled. A live PlasmaShell replacement changed the
+process from PID 312884 to 315101 while a paused state was cached; the recreated
+widget reconnected as one bridge client and displayed the cached line.
+
+Validation after the runtime fix:
+
+- `bun run format`: PASS
+- `bun run lint`: PASS
+- `bun run typecheck`: PASS
+- `bun run test`: PASS — 60 tests, 0 failures
+- `bun run build`: PASS
+- `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`: PASS
+- `kpackagetool6 --type Plasma/Applet --show apps/plasmoid/package`: PASS
+- `kpackagetool6 --type Plasma/Applet --upgrade apps/plasmoid/package`: PASS
+- final installed-build PlasmaShell log check: PASS — no KLyric QML warning or error
+- `plasmoidviewer -a apps/plasmoid/package -l topedge -f horizontal`: NOT RUN — not installed
+- `git diff --check`: PASS
+
+Task 6.8 remains incomplete because a real vertical panel, Breeze Light,
+font-size extremes, and real 150%/200% compositor scales are not yet validated.
+Tasks 6.1, 6.6, and 6.7 also remain incomplete pending the several-minute live
+pause, full Plasma-session restart, suspend/resume, and two-real-widget checks.
+The next exact action is to move KLyric temporarily into a real vertical panel
+and validate default icon-only plus opt-in text behavior before restoring the
+current horizontal layout.

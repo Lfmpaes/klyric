@@ -20,7 +20,7 @@ protocol parser used by the plasmoid. It uses sanitized fixture text only.
 | 1 | Start Plasma and bridge before Cider | PASS — automated | A widget client connects before the simulated extraction event and receives the later plugin publication. |
 | 2 | Start Cider before bridge | PASS — automated | Publication retry retains the newest state during bridge downtime and resumes after the retry clock fires. |
 | 3 | Restart bridge during playback | PASS — automated | Two clients receive the clear event; the restarted bridge has no cached state; publication retry and QML reconnect paths are covered separately. |
-| 4 | Restart Plasma during playback | PASS — automated | A newly handshaken WebSocket client receives the bridge's cached state. |
+| 4 | Restart Plasma during playback | PASS — live + automated | A newly handshaken WebSocket client receives cached state in the harness. Live validation replaced PlasmaShell while the bridge retained a sanitized paused line; the process changed from PID 312884 to 315101, the recreated widget reconnected as one client, and the cached line appeared directly in the panel. |
 | 5 | Reload plugin during playback | PASS — automated | Repeat setup disposes the earlier playback and lyric observers before starting replacements. |
 | 6 | Play a synchronized song | PASS — live + automated | Cider exposed 79 ordered DOM lines and an advancing active index; the automated pipeline delivered line changes to the widget parser. |
 | 7 | Play an unsynchronized song | PASS — fixture | Widget fallback coverage verifies the unsynchronized/unavailable presentation. A live catalog example was not required to validate the state contract. |
@@ -78,7 +78,7 @@ can be reconsidered.
 | Breeze Dark, 150% scale | PASS — runtime smoke | `QT_SCALE_FACTOR=1.5`; widget remained loaded for 5 seconds. |
 | Breeze Dark, 200% scale and RTL layout | PASS — runtime smoke | `QT_SCALE_FACTOR=2 QT_LAYOUT_DIRECTION=RTL`; widget remained loaded for 5 seconds. |
 | Long Unicode line | PASS — automated | 2,000-code-point fixture passes validation; compact text is bounded and elided/wrapped. |
-| Horizontal panel | PARTIAL | `plasmawindowed` smoke passed; a real panel placement remains manual. |
+| Horizontal panel | PASS — live runtime | Plasma 6.7.2, Breeze Dark, 100% scale, 1920x1200 Wayland output, 32 px horizontal top panel. The real applet rendered disconnected fallback and sanitized short lyric text at 100/360 px bounds; a long line elided at both 360 px and 200 px; disabling the music icon retained the text. Settings were restored to 100/360 px with the icon enabled. |
 | Vertical panel | MANUAL — NOT RUN | Static logic defaults to icon-only; `plasmoidviewer` is unavailable for a true vertical form factor. |
 | Breeze Light | MANUAL — NOT RUN | Changing the active user's global theme was intentionally avoided. |
 | Font setting extremes | MANUAL — NOT RUN | Kirigami-unit and bounded font logic passes `qmllint`; visual review remains. |
@@ -112,6 +112,6 @@ can be reconsidered.
 - Suspend and resume the machine with Cider, bridge, and two widget instances
   active.
 - Restart the Plasma session and confirm both widgets reconnect.
-- Place the widget in real horizontal and vertical panels.
+- Place the widget in a real vertical panel and verify icon-only and opt-in text modes.
 - Review Breeze Light, font-size extremes, and the real 100%, 150%, and 200%
   compositor scaling settings.

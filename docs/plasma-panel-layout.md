@@ -107,6 +107,36 @@ This behavior must be tested in an actual Plasma panel, not only through
 Record the Plasma version, panel orientation, scaling factor, theme, configured
 widths, and result in the Phase 6 integration matrix.
 
+## Real-panel validation result
+
+Validated on 2026-07-11 with Plasma 6.7.2 on Wayland, Breeze Dark, a
+1920x1200 output at 100% scale, and applet 53 in a 32 px horizontal top panel.
+The initial merged build still appeared icon-only because the real containment
+reported `configuration is not defined`; `plasmawindowed` and `qmllint` had not
+exposed that missing Plasma 6 runtime binding. The same load also revealed that
+the shared formatting script could not access `i18n()` and that
+`Kirigami.Theme.headingFont` was unavailable.
+
+Commit `d2224e0` binds settings through `Plasmoid.configuration`, keeps the
+formatting helper in the importing QML context, replaces the unsupported font
+assignment, and declares WebSocket signal parameters explicitly. After the
+package upgrade and PlasmaShell refresh:
+
+- disconnected fallback text rendered directly in the panel;
+- a sanitized short lyric rendered at the default 100/360 px bounds;
+- a sanitized long line remained bounded and displayed right-side elision;
+- disabling the music icon did not hide the lyric;
+- changing the maximum width from 360 px to 200 px visibly reduced the text
+  viewport while preserving elision;
+- the original 100/360 px bounds and enabled icon were restored;
+- replacing PlasmaShell while the bridge cached a paused line recreated the
+  client and restored the line in the panel;
+- the final installed build produced no KLyric QML runtime warning or error.
+
+The horizontal-panel regression criteria are satisfied. Real vertical-panel,
+Breeze Light, font-extreme, and compositor-scale checks remain in the broader
+Phase 6 matrix.
+
 ## Regression criteria
 
 The issue is fixed when all of the following are true:
