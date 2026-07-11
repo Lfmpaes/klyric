@@ -443,4 +443,5 @@ instances, then record the result in `docs/integration-testing.md` before
 continuing the remaining manual matrix.
 The implementation and automated integration commit is `9ab1f30`
 (`fix(integration): harden recovery and compatibility`). Documentation and
-checkpoint updates remain staged for the follow-up documentation commit.
+checkpoint updates are recorded in `dc15731`
+(`docs(phase): record integration hardening matrix`).
