@@ -1,13 +1,13 @@
 # KLyric phase status
 
-As of 2026-07-11, the workspace has a usable local git repository and the `main` branch is configured to track `origin/main`, but the remote ref cannot be resolved from this environment. Remote access to `https://github.com/Lfmpaes/klyric` is still blocked here: HTTPS returns `404`, and SSH returns `Permission denied (publickey)`. The phase journals below retain the earlier historical note that the workspace initially arrived without usable git metadata.
+As of 2026-07-11, the workspace has a usable local git repository and the `main` branch tracks the reachable `origin/main` remote. The phase journals below retain the earlier historical note that the workspace initially arrived without usable git metadata.
 
 | Phase | Status | Recommended model | Reasoning | Completed |
 |---|---|---|---|---|
 | 0 — Repository bootstrap | complete | GPT-5.6 Terra | Medium | 2026-07-10 |
 | 1 — Lyric extraction spike | complete | GPT-5.6 Sol | High | 2026-07-10 |
 | 2 — Protocol package | complete | GPT-5.6 Terra | High | 2026-07-11 |
-| 3 — Bridge MVP | pending | GPT-5.6 Terra | High | — |
+| 3 — Bridge MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 4 — Cider plugin MVP | pending | GPT-5.6 Terra | High | — |
 | 5 — Plasma widget MVP | pending | GPT-5.6 Terra | High | — |
 | 6 — Integration hardening | pending | GPT-5.6 Sol | High | — |
@@ -148,8 +148,51 @@ session transitions, and every WebSocket envelope. Final validation on
 - `bun run test`: PASS — 21 tests, 0 failures
 - `bun run build`: PASS
 
-Phase 2 is complete. Phase 3 is next at task 3.1: implement bridge
-configuration and loopback-only host validation. GitHub remote access remains
-unavailable from this environment; it does not block local protocol work. The
-Phase 2 implementation commit is `971f53f` (`feat(protocol): define validated
-state schema`).
+Phase 2 is complete. The Phase 2 implementation commit is `971f53f`
+(`feat(protocol): define validated state schema`).
+
+## Phase 3 journal
+
+Started 2026-07-11 at task 3.1. The persistent checkpoint, Phase 2 journal,
+implementation plan, clean `main` worktree, and local protocol implementation
+agree. The GitHub remote is now reachable and no longer blocks repository
+operations. This phase is limited to the Bun bridge, its tests, and related
+bridge documentation; it will not implement the Cider publisher or Plasma UI.
+
+Phase 3 completed 2026-07-11. The bridge resolves default, JSON-file,
+environment, and CLI configuration while rejecting every non-loopback host.
+It creates a 256-bit publisher token in the XDG config directory with `0600`
+permissions, supports explicit display and rotation commands, and never emits
+the token or lyric state through structured logs.
+
+The Bun server implements authenticated publication and clearing, normalized
+state reads, non-sensitive health reporting, sequence conflict handling,
+payload limits, rate limiting, in-memory duplicate suppression, playing-state
+staleness, paused-state expiry, bounded WebSocket clients, protocol handshake,
+cached-state delivery, broadcast updates, application pings/pongs, and graceful
+shutdown. `docs/bridge.md` records the operating contract and CLI usage.
+
+Bridge unit tests cover configuration precedence and host rejection, private
+token lifecycle, sequence handling, duplicate suppression, stopped-state
+normalization, and expiry. Integration tests cover unauthorized and malformed
+publications, cached state and later WebSocket broadcasts, duplicate response
+suppression, ping/pong behavior, clear lifecycle, and a spawned CLI bridge
+process. The process test is the mock publisher/client full lifecycle evidence.
+
+Final validation on 2026-07-11:
+
+- `bun run format`: PASS
+- `bun run lint`: PASS
+- `bun run typecheck`: PASS
+- `bun run test`: PASS — 30 tests, 0 failures
+- `bun run build`: PASS
+- `git diff --check`: PASS
+
+The loopback integration and process tests require temporary local port binds;
+they passed outside the restricted execution sandbox. No Plasma or Cider GUI
+validation applies to this bridge-only phase. Phase 3 implementation is
+`9855974` (`feat(bridge): add authenticated loopback service`).
+
+Phase 3 is complete. Phase 4 is next at task 4.1: implement deterministic
+plugin setup, teardown, and hot-reload cleanup. Keep GPT-5.6 Terra with High
+reasoning.
