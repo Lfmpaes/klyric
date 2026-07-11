@@ -2,8 +2,8 @@
   "KPlugin": {
     "Authors": [{ "Email": "", "Name": "Luiz Paes" }],
     "Category": "Multimedia",
-    "Description": "Displays Cider's active synchronized lyric line.",
-    "Icon": "audio-x-generic",
+    "Description": "Displays the current synchronized lyric line from Cider.",
+    "Icon": "view-media-lyrics",
     "Id": "dev.luizpaes.klyric",
     "License": "MIT",
     "Name": "KLyric",
