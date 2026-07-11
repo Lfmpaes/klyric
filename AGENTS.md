@@ -23,17 +23,17 @@ When documentation and repository state disagree, inspect the implementation and
 
 > **The agent must update this section whenever work starts, a task is completed, a blocker is discovered, validation changes, or a phase ends.**
 
-- **Current phase:** Phase 4 — Cider plugin MVP
-- **Phase status:** `in_progress`
-- **Current task:** 4.5 — Implement track-change, seek, pause, resume, stop, and stale-line handling
+- **Current phase:** Phase 5 — Plasma widget MVP
+- **Phase status:** `pending`
+- **Current task:** 5.1 — Create valid Plasma 6 metadata and package structure
 - **Recommended model:** GPT-5.6 Terra
 - **Reasoning:** High
-- **Last completed task:** 4.4 — Implement the plugin state machine
-- **Last verified commit:** `e11a8ea` — feat(cider-plugin): add lifecycle and state machine
-- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (36 pass), `bun run build`, and `git diff --check` passed on 2026-07-11. The bridge integration tests were rerun with normal local loopback access because restricted-sandbox port binds fail.
+- **Last completed task:** Phase 4 complete — Cider plugin MVP
+- **Last verified commit:** `uncommitted`
+- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (46 pass), `bun run build`, and `git diff --check` passed on 2026-07-11. The bridge integration tests were rerun with normal local loopback access because restricted-sandbox port binds fail.
 - **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
-- **Next exact action:** Implement task 4.5 by deriving track change, seek, pause, resume, stop, and stale-line behavior from the existing event-driven observers.
-- **Last updated:** 2026-07-11 — Tasks 4.1–4.4 are implemented and validated: deterministic lifecycle cleanup and reload replacement, guarded playback observation, Phase 1 adapter integration with fallback, and a normalized state machine. Phase 4 remains in progress at 4.5.
+- **Next exact action:** Begin Phase 5 at task 5.1 by validating the Plasma 6 package metadata and structure; do not start automatically.
+- **Last updated:** 2026-07-11 — Phase 4 completed with event-driven transition handling, loopback bridge publication, queue/retry/heartbeat behavior, settings, redacted diagnostics, and unit coverage. Cider runtime validation remains manual because Cider was not running with remote debugging.
 
 Allowed phase statuses:
 
@@ -136,14 +136,14 @@ Allowed phase statuses:
 - [x] **4.2** Implement normalized playback metadata and playback-state observation.
 - [x] **4.3** Integrate the selected lyric adapters and fallback strategy from Phase 1.
 - [x] **4.4** Implement the plugin state machine.
-- [ ] **4.5** Implement track-change, seek, pause, resume, stop, and stale-line handling.
-- [ ] **4.6** Implement the authenticated bridge client.
-- [ ] **4.7** Implement ordered publication, deduplication, heartbeat, retry, and backoff.
-- [ ] **4.8** Add plugin settings, token handling, source override, and connection testing.
-- [ ] **4.9** Add redacted diagnostics and compatibility reporting.
-- [ ] **4.10** Add plugin unit tests using Phase 1 fixtures.
-- [ ] **4.11** Verify no duplicate observers survive reload and bridge downtime does not affect Cider.
-- [ ] **Phase 4 complete** — All plugin exit criteria and checks pass.
+- [x] **4.5** Implement track-change, seek, pause, resume, stop, and stale-line handling.
+- [x] **4.6** Implement the authenticated bridge client.
+- [x] **4.7** Implement ordered publication, deduplication, heartbeat, retry, and backoff.
+- [x] **4.8** Add plugin settings, token handling, source override, and connection testing.
+- [x] **4.9** Add redacted diagnostics and compatibility reporting.
+- [x] **4.10** Add plugin unit tests using Phase 1 fixtures.
+- [x] **4.11** Verify no duplicate observers survive reload and bridge downtime does not affect Cider.
+- [x] **Phase 4 complete** — All plugin exit criteria and checks pass.
 
 ### Phase 5 — Plasma widget MVP
 

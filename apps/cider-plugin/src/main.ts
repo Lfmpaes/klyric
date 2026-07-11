@@ -1,7 +1,34 @@
 import { KLyricPlugin } from "./application/KLyricPlugin";
 import { runCapabilityInspection } from "./diagnostics/CapabilityInspectionTool";
+import { Diagnostics } from "./diagnostics/Diagnostics";
+import { BridgeClient } from "./publisher/BridgeClient";
+import {
+  type PluginSettings,
+  PluginSettingsStore,
+} from "./settings/PluginSettings";
 
 export { runCapabilityInspection };
+
+const settingsStore = new PluginSettingsStore();
+
+export function loadPluginSettings(): PluginSettings {
+  return settingsStore.load();
+}
+
+export function savePluginSettings(settings: PluginSettings): PluginSettings {
+  return settingsStore.save(settings);
+}
+
+export async function testBridgeConnection(
+  settings = settingsStore.load(),
+): Promise<boolean> {
+  try {
+    await new BridgeClient(settings).health();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 interface CiderPluginContext {
   author: string;
@@ -25,6 +52,7 @@ const runtimeKey = Symbol.for("dev.luizpaes.klyric.runtime");
 interface PluginRuntime {
   instance?: KLyricPlugin;
   setup?: Promise<void>;
+  diagnostics?: Diagnostics;
 }
 
 type PluginHost = typeof globalThis & {
@@ -53,9 +81,15 @@ const plugin: CiderPluginContext = {
       ...runCapabilityInspection(),
       note: "Capability names only; no lyric text or host state is serialized.",
     });
+    const diagnostics = new Diagnostics(
+      plugin.version,
+      runCapabilityInspection(),
+    );
+    runtime.diagnostics = diagnostics;
     runtime.setup = (async () => {
       await runtime.instance?.teardown();
       const instance = new KLyricPlugin({
+        diagnostics,
         onError: (error) => console.warn("[KLyric] observer error", error.name),
       });
       runtime.instance = instance;

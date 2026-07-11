@@ -25,11 +25,17 @@ export interface PluginStateMachineOptions {
   onState?: (phase: PluginPhase, state: KLyricState) => void;
 }
 
+export type PluginStateListener = (
+  phase: PluginPhase,
+  state: KLyricState,
+) => void;
+
 /** Converts observed host data into a complete, publication-ready protocol state. */
 export class PluginStateMachine {
   private readonly now: () => Date;
   private readonly sessionId: string;
   private readonly onState: (phase: PluginPhase, state: KLyricState) => void;
+  private readonly listeners = new Set<PluginStateListener>();
   private phase: PluginPhase = "initializing";
   private playback: PlaybackSnapshot = { status: "stopped", track: null };
   private lyrics: RawLyricsSnapshot | null = null;
@@ -38,6 +44,8 @@ export class PluginStateMachine {
   private connected = false;
   private sourceError = false;
   private bridgeError = false;
+  private trackLoading = false;
+  private lineStale = false;
   private sequence = 0;
 
   public constructor(options: PluginStateMachineOptions = {}) {
@@ -65,15 +73,42 @@ export class PluginStateMachine {
   public setPlayback(snapshot: PlaybackSnapshot): void {
     const trackChanged =
       trackIdentity(this.playback) !== trackIdentity(snapshot);
+    const positionJumped =
+      !trackChanged &&
+      snapshot.positionMs !== undefined &&
+      this.playback.positionMs !== undefined &&
+      Math.abs(snapshot.positionMs - this.playback.positionMs) >= 2_000;
     this.playback = snapshot;
-    if (trackChanged) this.lyrics = null;
+    if (trackChanged) {
+      this.lyrics = null;
+      this.trackLoading = snapshot.track !== null;
+      this.lineStale = snapshot.track !== null;
+    } else if (positionJumped) {
+      this.lyrics = null;
+      this.lineStale = true;
+    }
+    if (snapshot.status === "stopped") {
+      this.lyrics = null;
+      this.sourceKind = "none";
+      this.trackLoading = false;
+      this.lineStale = false;
+    }
     this.emitDerived();
   }
 
   public setLyrics(snapshot: RawLyricsSnapshot): void {
+    if (
+      snapshot.trackId !== undefined &&
+      this.playback.track?.id !== undefined &&
+      snapshot.trackId !== this.playback.track.id
+    ) {
+      return;
+    }
     this.lyrics = snapshot;
     this.sourceKind = snapshot.source;
     this.sourceError = false;
+    this.trackLoading = false;
+    this.lineStale = false;
     this.emitDerived();
   }
 
@@ -97,6 +132,16 @@ export class PluginStateMachine {
     return this.phase;
   }
 
+  public subscribe(listener: PluginStateListener): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  /** Produces a new ordered publication for an otherwise unchanged heartbeat. */
+  public heartbeat(): KLyricState {
+    return this.makeState();
+  }
+
   private emitDerived(): void {
     this.phase = this.derivePhase();
     this.emit();
@@ -108,6 +153,7 @@ export class PluginStateMachine {
     if (this.sourceError) return "source-error";
     if (!this.connected) return "connecting";
     if (this.playback.track === null) return "idle";
+    if (this.trackLoading) return "loading-track";
     switch (this.playback.status) {
       case "playing":
         return this.lyrics?.currentLine === null || this.lyrics === null
@@ -126,7 +172,9 @@ export class PluginStateMachine {
   }
 
   private emit(): void {
-    this.onState(this.phase, this.makeState());
+    const state = this.makeState();
+    this.onState(this.phase, state);
+    for (const listener of this.listeners) listener(this.phase, state);
   }
 
   private makeState(): KLyricState {
@@ -152,7 +200,7 @@ export class PluginStateMachine {
       previousLine: hasLyrics ? neighbor(lines, currentIndex, -1) : null,
       nextLine: hasLyrics ? neighbor(lines, currentIndex, 1) : null,
       hasLyrics,
-      stale: false,
+      stale: this.lineStale,
     };
     if (this.playback.positionMs !== undefined)
       state.positionMs = this.playback.positionMs;

@@ -16,6 +16,7 @@ import type {
   PlaybackSourceContext,
 } from "../src/cider/PlaybackSource";
 import { normalizeTrack } from "../src/cider/PlaybackSource";
+import { BridgeClientError } from "../src/publisher/BridgeClient";
 
 class FakePlayback implements PlaybackObserver {
   public starts = 0;
@@ -122,6 +123,27 @@ describe("plugin lifecycle", () => {
     expect(fallback.starts).toBe(1);
     await plugin.teardown();
   });
+
+  test("keeps Cider observers active while the bridge is unavailable", async () => {
+    const playback = new FakePlayback();
+    const plugin = new KLyricPlugin({
+      document: {} as Document,
+      playback,
+      createLyricsSources: () => [new FakeLyricsSource()],
+      createPublisher: () => ({
+        async publish() {
+          throw new BridgeClientError("network", "offline");
+        },
+        async clear() {},
+      }),
+    });
+
+    await plugin.setup();
+    await settled();
+    expect(plugin.isStarted()).toBe(true);
+    expect(playback.starts).toBe(1);
+    await plugin.teardown();
+  });
 });
 
 describe("plugin state machine", () => {
@@ -156,7 +178,7 @@ describe("plugin state machine", () => {
     expect(phases).toEqual([
       "connecting",
       "idle",
-      "playing-without-lyrics",
+      "loading-track",
       "playing-with-lyrics",
       "paused",
       "bridge-error",
@@ -195,6 +217,60 @@ describe("plugin state machine", () => {
       lyricsKind: "unavailable",
       currentLine: null,
       hasLyrics: false,
+    });
+  });
+
+  test("marks a prior line stale until a seek receives a fresh lyric snapshot", () => {
+    const states: RawState[] = [];
+    const machine = new PluginStateMachine({
+      sessionId: "test-session",
+      onState: (_, state) => states.push(state),
+    });
+    machine.setConnected(true);
+    machine.setPlayback({
+      status: "playing",
+      track: { id: "track-a" },
+      positionMs: 1_000,
+    });
+    machine.setLyrics(snapshot());
+    machine.setPlayback({
+      status: "playing",
+      track: { id: "track-a" },
+      positionMs: 12_000,
+    });
+    expect(states.at(-1)).toMatchObject({
+      currentLine: null,
+      hasLyrics: false,
+      stale: true,
+    });
+
+    machine.setLyrics(snapshot());
+    expect(states.at(-1)).toMatchObject({
+      currentLine: { text: "Current" },
+      stale: false,
+    });
+  });
+
+  test("retains a paused line but clears it after playback stops", () => {
+    const states: RawState[] = [];
+    const machine = new PluginStateMachine({
+      sessionId: "test-session",
+      onState: (_, state) => states.push(state),
+    });
+    machine.setConnected(true);
+    machine.setPlayback({ status: "playing", track: { id: "track-a" } });
+    machine.setLyrics(snapshot());
+    machine.setPlayback({ status: "paused", track: { id: "track-a" } });
+    expect(states.at(-1)).toMatchObject({
+      playbackStatus: "paused",
+      currentLine: { text: "Current" },
+    });
+    machine.setPlayback({ status: "stopped", track: null });
+    expect(states.at(-1)).toMatchObject({
+      playbackStatus: "stopped",
+      lyricsKind: "unavailable",
+      currentLine: null,
+      stale: false,
     });
   });
 });
@@ -236,4 +312,9 @@ function snapshot(): RawLyricsSnapshot {
     currentLine: { text: "Current", index: 1 },
     currentIndex: 1,
   };
+}
+
+async function settled(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
 }
