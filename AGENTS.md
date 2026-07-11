@@ -29,7 +29,7 @@ When documentation and repository state disagree, inspect the implementation and
 - **Recommended model:** GPT-5.6 Sol
 - **Reasoning:** High
 - **Last completed task:** 6.11 — Update compatibility and manual-test documentation
-- **Last verified commit:** `9ab1f30` — fix(integration): harden recovery and compatibility
+- **Last verified commit:** `dc15731` — docs(phase): record integration hardening matrix
 - **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (59 pass), `bun run build`, `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`, instrumented latency (five samples, 1.774 ms maximum), live redacted Cider 3.1.8 playback/lyrics/minimize/closed-view checks, `kpackagetool6 --type Plasma/Applet --upgrade apps/plasmoid/package`, `plasmawindowed dev.luizpaes.klyric` at 100%, 150%, and 200%/RTL, and `git diff --check` passed on 2026-07-11. Loopback tests used normal local access because the restricted sandbox blocks port binds.
 - **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. `plasmoidviewer` is unavailable, and completing suspend/resume, Plasma-session restart, real vertical-panel, Breeze Light, and font-extreme checks requires disruptive manual interaction with the active desktop session.
 - **Next exact action:** Complete task 6.1 by running the documented suspend/resume scenario with Cider, the bridge, and two live widget instances active.
