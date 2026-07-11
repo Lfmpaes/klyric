@@ -12,6 +12,10 @@ between those components.
 Bridge configuration, token management, and its local HTTP/WebSocket API are
 documented in [docs/bridge.md](docs/bridge.md).
 
+The Phase 6 scenario matrix, performance results, compatibility table,
+security audit, and remaining manual checks are in
+[docs/integration-testing.md](docs/integration-testing.md).
+
 ## Prerequisites
 
 - Bun 1.3.14 or newer
@@ -28,5 +32,5 @@ bun run test
 bun run build
 ```
 
-Phase 0 supplies foundations only. Lyric extraction is deliberately deferred to
-Phase 1.
+Live Cider compatibility currently requires its Lyrics view to remain open.
+See the integration matrix before reporting a new compatibility result.
