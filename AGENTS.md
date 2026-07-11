@@ -24,7 +24,7 @@ When documentation and repository state disagree, inspect the implementation and
 > **The agent must update this section whenever work starts, a task is completed, a blocker is discovered, validation changes, or a phase ends.**
 
 - **Current phase:** Phase 6 — Integration hardening
-- **Phase status:** `in_progress`
+- **Phase status:** `blocked`
 - **Current task:** 6.1 — Execute and document the full end-to-end scenario matrix
 - **Current validation focus:** 6.6/6.7 — Determine and execute the safest real system-session restart and suspend/resume validations
 - **Recommended model:** GPT-5.6 Sol
@@ -170,13 +170,13 @@ Allowed phase statuses:
 **Model:** GPT-5.6 Sol — High  
 **Scope:** End-to-end reliability, compatibility, performance, security verification, and bug fixing. Do not prepare release artifacts yet.
 
-- [ ] **6.1** Execute and document the full end-to-end scenario matrix.
+- [ ] **6.1** Execute and document the full end-to-end scenario matrix. BLOCKED — the suspend/resume row needs a user-present manual wake.
 - [x] **6.2** Measure extraction-to-display latency and meet the 250 ms target under normal conditions.
 - [x] **6.3** Harden adapter fallback and Cider compatibility detection.
 - [x] **6.4** Verify minimized Cider and closed lyric-view behavior.
 - [x] **6.5** Verify pause, resume, rapid seek, rapid skip, repeated lines, replay, and no-lyrics cases.
-- [ ] **6.6** Verify independent bridge, plugin, Plasma, and system-session restarts.
-- [ ] **6.7** Verify suspend/resume and multiple widget instances. Two real widget instances pass; real suspend/resume remains.
+- [ ] **6.6** Verify independent bridge, plugin, Plasma, and system-session restarts. BLOCKED — a true Plasma logout requires the user to log back in and would terminate the active GUI development session.
+- [ ] **6.7** Verify suspend/resume and multiple widget instances. BLOCKED — two real widget instances pass, but RTC-timed automatic wake requires a sudo password, so the user must be present for real suspend/resume.
 - [x] **6.8** Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines.
 - [x] **6.9** Audit loopback binding, authentication, schema validation, logging, and lyric persistence.
 - [x] **6.10** Fix leaks, stale timers, unbounded queues, and recovery defects.

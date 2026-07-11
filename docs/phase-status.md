@@ -612,3 +612,10 @@ to log back in and would terminate the active GUI development session. Those
 are the only remaining Phase 6 execution gates; they keep tasks 6.1, 6.6, and
 6.7 unchecked. The verified implementation was committed as `f00ef43`
 (`fix(plasmoid): harden panel layout and reconnect`).
+
+Phase 6 is now `blocked`, not complete: every non-disruptive implementation
+and validation step is finished, but the remaining real suspend/resume and
+logout/login checks require the user to wake and re-enter the Plasma session.
+Resume with the bridge and applet active, perform those two user-present
+cycles, confirm the applet reconnects after each, then close tasks 6.1, 6.6,
+6.7, and the Phase 6 exit criterion if both pass.
