@@ -1,5 +1,7 @@
 # KLyric phase status
 
+As of 2026-07-11, the workspace has a usable local git repository and the `main` branch is configured to track `origin/main`, but the remote ref cannot be resolved from this environment. Remote access to `https://github.com/Lfmpaes/klyric` is still blocked here: HTTPS returns `404`, and SSH returns `Permission denied (publickey)`. The phase journals below retain the earlier historical note that the workspace initially arrived without usable git metadata.
+
 | Phase | Status | Recommended model | Reasoning | Completed |
 |---|---|---|---|---|
 | 0 — Repository bootstrap | complete | GPT-5.6 Terra | Medium | 2026-07-10 |

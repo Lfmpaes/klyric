@@ -29,11 +29,11 @@ When documentation and repository state disagree, inspect the implementation and
 - **Recommended model:** GPT-5.6 Terra
 - **Reasoning:** High
 - **Last completed task:** Phase 1 complete — Lyric extraction spike
-- **Last verified commit:** Uncommitted (workspace has no Git metadata)
-- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (10 pass), and `bun run build` passed on 2026-07-10. Live Cider 3.1.8 inspection passed for line changes, pause/resume, seek, track change, minimized operation, and lyric-view open/closed behavior using redacted reports.
-- **Known blockers:** Workspace has no usable Git metadata. Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
+- **Last verified commit:** `59517c3` — first commit
+- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (10 pass), and `bun run build` passed on 2026-07-10. Local git branch metadata was verified on 2026-07-11 with `git status --short --branch` and `git branch -vv`.
+- **Known blockers:** GitHub remote access is unavailable from this environment: HTTPS returns `404` for `https://github.com/Lfmpaes/klyric` and SSH returns `Permission denied (publickey)`, so the configured upstream cannot be resolved here. Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
 - **Next exact action:** Start Phase 2 at task 2.1 by defining protocol version constants and shared enums.
-- **Last updated:** 2026-07-10 — Phase 1 complete; checkpoint advanced to pending Phase 2 task 2.1 without starting implementation.
+- **Last updated:** 2026-07-11 — Local git metadata is present and branch tracking is configured; GitHub remote access remains blocked by authentication.
 
 Allowed phase statuses:
 
