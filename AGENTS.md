@@ -26,16 +26,16 @@ When documentation and repository state disagree, inspect the implementation and
 - **Current phase:** Phase 6 — Integration hardening
 - **Phase status:** `in_progress`
 - **Current task:** 6.1 — Execute and document the full end-to-end scenario matrix
-- **Current validation focus:** 6.8 — Verify default icon-only and opt-in text behavior in a real vertical Plasma panel
+- **Current validation focus:** 6.6/6.7 — Determine and execute the safest real system-session restart and suspend/resume validations
 - **Recommended model:** GPT-5.6 Sol
 - **Reasoning:** High
-- **Last completed task:** 6.11 — Update compatibility and manual-test documentation
-- **Last verified implementation commit:** `d2224e0` — fix(plasmoid): wire panel runtime context
+- **Last completed task:** 6.8 — Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines
+- **Last verified implementation commit:** `f00ef43` — harden panel layout and WebSocket reconnect
 - **Open pull request:** None — PR #1 (`fix(plasmoid): show lyric text in horizontal panels`) merged into `main` at `c7d43ab`.
-- **Last validation:** All required checks passed on 2026-07-11 with 60 tests. The final build installed cleanly and displayed fallback, short lyric, bounded long lyric, no-icon text, and cached state after a real PlasmaShell restart in a Plasma 6.7.2 horizontal panel; no KLyric QML runtime warning remained.
-- **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. `plasmoidviewer` is unavailable, and completing suspend/resume, a full Plasma-session restart, a real vertical panel, Breeze Light, font extremes, real 150%/200% compositor scaling, and two-real-widget checks requires further interaction with the active desktop session.
-- **Next exact action:** Move KLyric temporarily into a real vertical panel, validate default icon-only and opt-in text behavior, and restore the current horizontal layout.
-- **Last updated:** 2026-07-11 — Fixed real-panel Plasma 6 runtime wiring, completed horizontal-panel and live PlasmaShell-restart validation, and recorded the remaining Phase 6 visual/session checks.
+- **Last validation:** All 61 automated tests and required format, lint, typecheck, build, `qmllint`, horizontal `plasmoidviewer`, and diff checks pass. Real `+12`, 150%/200% compositor scale, Arabic RTL, and bridge stop/start recovery pass; the desktop is restored to Breeze Dark, 100%, font zero, with no temporary widget or bridge.
+- **Known blockers:** Cider 3.1.8 still requires its Lyrics view open. Real suspend/resume needs a manual wake because RTC access requires a sudo password. A full Plasma-session logout also needs the user to log back in and would terminate the active GUI development session.
+- **Next exact action:** With the user present to wake and log back in, suspend/resume once, then log out and back into Plasma and confirm applet 53 reconnects to a running bridge.
+- **Last updated:** 2026-07-11 — Completed task 6.8 and all non-disruptive validation, restored the desktop, and isolated the two user-presence-required Phase 6 gates.
 
 Allowed phase statuses:
 
@@ -176,8 +176,8 @@ Allowed phase statuses:
 - [x] **6.4** Verify minimized Cider and closed lyric-view behavior.
 - [x] **6.5** Verify pause, resume, rapid seek, rapid skip, repeated lines, replay, and no-lyrics cases.
 - [ ] **6.6** Verify independent bridge, plugin, Plasma, and system-session restarts.
-- [ ] **6.7** Verify suspend/resume and multiple widget instances.
-- [ ] **6.8** Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines. The horizontal-panel sizing fix is implemented in draft PR #1; real-panel validation remains pending.
+- [ ] **6.7** Verify suspend/resume and multiple widget instances. Two real widget instances pass; real suspend/resume remains.
+- [x] **6.8** Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines.
 - [x] **6.9** Audit loopback binding, authentication, schema validation, logging, and lyric persistence.
 - [x] **6.10** Fix leaks, stale timers, unbounded queues, and recovery defects.
 - [x] **6.11** Update compatibility and manual-test documentation.

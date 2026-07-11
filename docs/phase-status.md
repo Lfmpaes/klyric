@@ -496,3 +496,119 @@ pause, full Plasma-session restart, suspend/resume, and two-real-widget checks.
 The next exact action is to move KLyric temporarily into a real vertical panel
 and validate default icon-only plus opt-in text behavior before restoring the
 current horizontal layout.
+
+Phase 6 continued on 2026-07-11 with a temporary 64 px left panel and a second
+real KLyric instance. Both widget clients connected to the loopback bridge and
+received the same sanitized paused state. The state remained visible for more
+than eight minutes, closing the several-minute pause row when combined with the
+earlier live Cider pause/resume and automated expiry coverage. A managed
+`plasma-plasmashell.service` restart recreated both clients and delivered the
+cached line, adding live two-instance restart evidence.
+
+The default vertical icon-only mode passed, but enabling vertical text exposed
+another real-containment defect: the compact representation supplied only
+horizontal-axis layout hints and reused its horizontal `RowLayout`, so the
+vertical panel showed only a clipped horizontal prefix. The current uncommitted
+fix passes the form factor into `CompactRepresentation`, adds vertical-axis
+minimum/preferred/maximum lengths, separates horizontal and vertical content,
+and renders opt-in text as a bounded label rotated -90 degrees. After package
+upgrade and a service-managed PlasmaShell restart, the word `Vertical` rendered
+rotated in the real left panel and disabling the option restored icon-only
+mode. Two new static regression assertions cover the form-factor binding,
+height hint, rotation, horizontal-layout exclusion, and `Text.VerticalFit`.
+
+Breeze Light and the minimum `fontSizeAdjustment=-6` were also visually
+validated in both real panel orientations. The pre-fix `+12` setting then
+clipped in the 32 px horizontal panel. The working tree now applies
+`Text.VerticalFit` with a one-pixel lower bound to both compact labels, but the
+environment exhausted its approval quota before that final change could be
+installed and visually rechecked. The reversible test setup is still active:
+temporary panel 54 remains, both live widgets were last set to `+12` while the
+on-disk Plasma config still records `-6`, Breeze Light remains active instead
+of the original Breeze Dark, and Show Desktop mode may remain active. The
+temporary bridge was stopped cleanly. No workaround was attempted. The first
+action after explicit approval or quota reset must be to restore the desktop,
+then install and recheck the font-fit change before continuing real 150%/200%
+scaling, real RTL, suspend/resume, and the full session restart.
+
+Repository validation for the vertical fix:
+
+- `bun run format`: PASS
+- `bun run lint`: PASS
+- `bun run typecheck`: PASS
+- `bun run build`: PASS
+- `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`: PASS
+- `bun test apps/plasmoid/tests/protocol.test.ts`: PASS — 6 tests, 0 failures
+- `bun run test`: PARTIAL — 53 tests pass; eight bridge/integration tests fail with sandbox `EADDRINUSE` because normal loopback access was not approved in this continuation
+- `git diff --check`: PASS
+
+Tasks 6.1, 6.6, 6.7, and 6.8 remain incomplete. Multiple real widget
+instances, real vertical behavior, Breeze Light, minimum font size, and the
+several-minute pause row now pass. Real suspend/resume, a full Plasma-session
+restart, live revalidation of the maximum-font fix, real 150%/200% compositor
+scaling and RTL, desktop cleanup, full tests with loopback access, and a focused
+commit remain required.
+
+The user subsequently restored the desktop before the next continuation:
+Breeze Dark is active, temporary panel 54/applet 56 is absent, applet 53 has no
+persisted override group, and `plasmoidviewer` is now installed through Plasma
+SDK. The approval-quota cleanup blocker is resolved. The current working tree
+still contains only the intended vertical-layout/font-fit implementation and
+its Phase 6 documentation; live `+12`, real scale/RTL, suspend/resume, full
+session restart, full loopback tests, and commits remain.
+
+The current working tree was then upgraded into the live Plasma installation
+and PlasmaShell was restarted through its managed user service. With applet 53
+set to `fontSizeAdjustment=+12`, the disconnected fallback remained fully
+bounded inside the real 32 px horizontal panel, closing the maximum-font
+regression exposed by the preceding run. The required
+`plasmoidviewer -a apps/plasmoid/package -l topedge -f horizontal` smoke check
+also loaded for ten seconds without a QML error. Applet font cleanup and real
+150%/200% compositor scaling are the next exact validation step.
+
+Applet 53 was restored to font adjustment zero. The real eDP-1 Wayland output
+was recorded at 1920x1200 and scale 1.0, then changed with `kscreen-doctor` to
+1.5 and 2.0. At both real compositor scales, the horizontal widget remained
+legible and bounded; the output was restored exactly to scale 1.0 afterward.
+An original sanitized Arabic state was then published through the real
+loopback bridge. A temporary panel widget rendered the line right-to-left and
+fully contained, closing the remaining task 6.8 RTL requirement; widget 54 was
+removed immediately afterward.
+
+That setup exposed a recovery defect in the restored applet 53: QtWebSockets
+can leave `active=true` after a failed connection, so the retry timer's later
+`active=true` assignment did not create a new socket. The closed-state handler
+now clears `socket.active` before scheduling the reconnect, with a focused
+static regression assertion. Investigation also found that the visible
+desktop was owned by an unmanaged `plasmashell --replace` process (PID 397737),
+so nominal `plasma-plasmashell.service` restarts had started a second process
+that exited immediately and had not reloaded the widget. Replacing the actual
+active process loaded the installed fix. The original widget then connected,
+the bridge was stopped and restarted independently, and `/health` reported one
+automatically reconnected client without any PlasmaShell restart. A fresh RTL
+publication appeared in applet 53, proving full recovery. Task 6.8 is now
+complete; only real suspend/resume and full Plasma-session restart evidence
+keep tasks 6.1, 6.6, and 6.7 open.
+
+Final repository validation after the retry change:
+
+- `bun run format`: PASS
+- `bun run lint`: PASS
+- `bun run typecheck`: PASS
+- `bun run test`: PASS — 61 tests, 0 failures
+- `bun run build`: PASS
+- `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`: PASS
+- `plasmoidviewer -a apps/plasmoid/package -l topedge -f horizontal`: PASS — loaded for the bounded ten-second smoke window; timeout exit 124 was expected
+- `git diff --check`: PASS
+
+Cleanup was verified after validation: eDP-1 is back at scale 1.0,
+`fontSizeAdjustment=0`, temporary widgets 54 and 56 are absent, the temporary
+bridge is stopped, and the active shell is PID 445227 running
+`plasmashell --replace`. An RTC-timed suspend cannot be made self-recovering in
+this environment because `/dev/rtc0` needs privilege and non-interactive sudo
+reports that a password is required. A real suspend therefore needs the user
+present to wake the machine. A full Plasma logout similarly requires the user
+to log back in and would terminate the active GUI development session. Those
+are the only remaining Phase 6 execution gates; they keep tasks 6.1, 6.6, and
+6.7 unchecked. The verified implementation was committed as `f00ef43`
+(`fix(plasmoid): harden panel layout and reconnect`).
