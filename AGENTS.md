@@ -6,56 +6,75 @@ KLyric displays Cider’s active synchronized lyric line in a KDE Plasma 6 widge
 
 ## Source of truth
 
-Before changing code, read these files in order:
+Before changing code, read:
 
-1. `AGENTS.md`
-2. `docs/phase-status.md`
-3. `KLYRIC_IMPLEMENTATION_PLAN.md`
-4. The current Git branch, `git status`, and recent commits
+1. `AGENTS.md`.
+2. Only the current phase section in `docs/phase-status.md`.
+3. Only the current phase section in `KLYRIC_IMPLEMENTATION_PLAN.md`.
+4. `git status` and commits since the last verified implementation commit.
 
-`AGENTS.md` is the quick operational checkpoint. `docs/phase-status.md` is the detailed implementation journal. They must agree.
+Read either complete document only when the checkpoint is inconsistent, architecture or phase boundaries may change, or the relevant section lacks required context.
 
-When documentation and repository state disagree, inspect the implementation and tests, reconcile both status files, and record the discrepancy. Do not assume a checked item is complete without supporting code or validation.
+`AGENTS.md` is the operational checkpoint. `docs/phase-status.md` is the detailed journal. When they disagree with Git, inspect the implementation and tests, reconcile the records, and document the discrepancy.
 
 ---
 
 ## Persistent checkpoint
 
-> **The agent must update this section whenever work starts, a task is completed, a blocker is discovered, validation changes, or a phase ends.**
+Update this section once after a meaningful implementation or validation batch, when a material blocker changes, or when the phase status changes.
 
 - **Current phase:** Phase 6 — Integration hardening
 - **Phase status:** `blocked`
-- **Current task:** 6.1 — Execute and document the full end-to-end scenario matrix
-- **Current validation focus:** 6.6/6.7 — Determine and execute the safest real system-session restart and suspend/resume validations
-- **Recommended model:** GPT-5.6 Sol
-- **Reasoning:** High
+- **Current work mode:** Phase 6B — Manual desktop acceptance
+- **Current task:** 6.1 — Execute and document the remaining end-to-end scenarios
+- **Current validation focus:** 6.6/6.7 — Real Plasma logout/login and suspend/resume
+- **Recommended next model:** GPT-5.6 Terra
+- **Reasoning:** Medium
+- **Escalation:** GPT-5.6 Sol — High only if a manual scenario exposes an unexplained cross-component defect
 - **Last completed task:** 6.8 — Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines
 - **Last verified implementation commit:** `f00ef43` — harden panel layout and WebSocket reconnect
-- **Open pull request:** None — PR #1 (`fix(plasmoid): show lyric text in horizontal panels`) merged into `main` at `c7d43ab`.
-- **Last validation:** All 61 automated tests and required format, lint, typecheck, build, `qmllint`, horizontal `plasmoidviewer`, and diff checks pass. Real `+12`, 150%/200% compositor scale, Arabic RTL, and bridge stop/start recovery pass; the desktop is restored to Breeze Dark, 100%, font zero, with no temporary widget or bridge.
-- **Known blockers:** Cider 3.1.8 still requires its Lyrics view open. Real suspend/resume needs a manual wake because RTC access requires a sudo password. A full Plasma-session logout also needs the user to log back in and would terminate the active GUI development session.
-- **Next exact action:** With the user present to wake and log back in, suspend/resume once, then log out and back into Plasma and confirm applet 53 reconnects to a running bridge.
-- **Last updated:** 2026-07-11 — Completed task 6.8 and all non-disruptive validation, restored the desktop, and isolated the two user-presence-required Phase 6 gates.
+- **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
+- **Last validation:** All 61 automated tests and required format, lint, typecheck, build, `qmllint`, horizontal `plasmoidviewer`, and diff checks pass. Real `+12`, 150%/200% scaling, Arabic RTL, multiple widgets, PlasmaShell replacement, and bridge stop/start recovery pass. The desktop was restored.
+- **Known blockers:** Cider 3.1.8 requires its Lyrics view open. Suspend/resume requires the user to wake the machine. A full Plasma logout requires the user to log back in and terminates the active GUI session.
+- **Execution gate:** Do not start Phase 6B unless the user confirms they are present, can wake the machine, can log back into Plasma, and accept termination of the current GUI session.
+- **Next exact action:** Verify the worktree is safe, suspend/resume once, then log out and back into Plasma and confirm applet 53 reconnects after both cycles.
+- **Last updated:** 2026-07-11 — All non-disruptive Phase 6 work is complete; two user-presence-required checks remain.
 
-Allowed phase statuses:
+Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 
-- `pending`
-- `in_progress`
-- `blocked`
-- `complete`
+---
+
+## Model selection
+
+The user manually selects a model and prompts Codex again after every session. Every handoff must therefore recommend the model for the **next exact action** and include a ready-to-copy continuation prompt.
+
+| Model | Use for |
+|---|---|
+| GPT-5.6 Luna — Low/Medium | Small documentation, checklist, Git, formatting, or exact mechanical edits |
+| GPT-5.6 Terra — Medium | Validation runbooks, packaging, installation, documentation, checkpoint reconciliation, narrow routine debugging |
+| GPT-5.6 Terra — High | Known implementation fixes, regression tests, substantial work inside an established architecture |
+| GPT-5.6 Sol — High | Unexplained cross-component defects, race/lifecycle/recovery failures, architecture or security decisions |
+
+Rules:
+
+- Start with the cheapest adequate model.
+- Do not use Sol for established commands, manual validation, installation, desktop restoration, status updates, or routine Git work.
+- Before escalating to Sol, record the failure, expected behavior, reproduction, relevant redacted logs, affected components, and why the issue is not a known-scope Terra task.
+- After Sol identifies the root cause and fix, return implementation and revalidation to Terra when practical.
+- A failed command alone is not a reason to escalate; first check environment, permissions, dependencies, and documented blockers.
 
 ---
 
 ## Checklist rules
 
 - Use `[ ]` only for pending or incomplete work.
-- Use `[x]` only after the implementation exists and its required validation passes.
-- Add `BLOCKED — <reason>` beside an item that cannot proceed.
-- Never mark an entire phase complete while one of its required items is unchecked.
-- Keep the current task in the persistent checkpoint aligned with the first actionable unchecked item.
-- Update `docs/phase-status.md` with more detailed evidence, commands, results, limitations, and handoff notes.
-- When interrupted mid-phase, preserve partial work and leave the exact resume point in the persistent checkpoint.
-- Do not erase completed checklist history during refactors.
+- Use `[x]` only after implementation and required validation pass.
+- Add `BLOCKED — <reason>` beside externally blocked work.
+- Never complete a phase while a required item is unchecked.
+- Align the checkpoint with the first actionable unchecked item.
+- Record detailed evidence in `docs/phase-status.md`.
+- Preserve partial work and the exact resume point when interrupted.
+- Do not erase completed checklist history.
 
 ---
 
@@ -63,249 +82,260 @@ Allowed phase statuses:
 
 ### Phase 0 — Repository bootstrap
 
-**Model:** GPT-5.6 Terra — Medium  
-**Scope:** Foundations only. Do not investigate Cider internals or implement product functionality.
+**Historical model:** GPT-5.6 Terra — Medium  
+**Scope:** Foundations only.
 
 - [x] **0.1** Create the Bun workspace and root `package.json`.
-- [x] **0.2** Add `bun.lock`, strict base TypeScript configuration, Biome, EditorConfig, and Git ignore rules.
-- [x] **0.3** Import and rename the official Cider plugin template under `apps/cider-plugin`.
-- [x] **0.4** Create skeleton packages for `apps/bridge`, `apps/plasmoid`, `packages/protocol`, and test utilities.
+- [x] **0.2** Add `bun.lock`, strict TypeScript configuration, Biome, EditorConfig, and Git ignore rules.
+- [x] **0.3** Import and rename the official Cider plugin template.
+- [x] **0.4** Create skeleton packages for the bridge, plasmoid, protocol, and test utilities.
 - [x] **0.5** Add root development, build, lint, typecheck, test, package, install, and uninstall scripts.
 - [x] **0.6** Add CI and release workflow skeletons.
-- [x] **0.7** Create `README.md`, architecture documentation, and `docs/phase-status.md`.
-- [x] **0.8** Verify the empty bridge starts, the empty plasmoid loads, and Cider loads the renamed plugin.
-- [x] **0.9** Run all checks available at this phase and record results.
-- [x] **Phase 0 complete** — All exit criteria pass and status files are updated.
+- [x] **0.7** Create the initial documentation and phase journal.
+- [x] **0.8** Verify the empty bridge, plasmoid, and renamed Cider plugin load.
+- [x] **0.9** Run and record all checks available at this phase.
+- [x] **Phase 0 complete**.
 
 ### Phase 1 — Lyric extraction spike
 
-**Model:** GPT-5.6 Sol — High  
-**Scope:** Prove and document lyric extraction only. Do not implement the production bridge, protocol, or Plasma UI.
+**Historical model:** GPT-5.6 Sol — High  
+**Scope:** Prove and document lyric extraction only.
 
-- [x] **1.1** Add safe, redacted Cider capability-inspection tooling.
-- [x] **1.2** Inspect synchronized playback, line changes, pause/resume, seeking, track changes, and lyric-view open/closed behavior.
-- [x] **1.3** Identify the full lyric data source, active line/index, timestamps, playback position, and stable subscription mechanism.
+- [x] **1.1** Add safe, redacted Cider capability inspection.
+- [x] **1.2** Inspect playback, line changes, pause/resume, seeking, track changes, and lyric-view behavior.
+- [x] **1.3** Identify lyric data, active line/index, timestamps, playback position, and subscription mechanisms.
 - [x] **1.4** Implement the `LyricsSource` interface and source factory.
-- [x] **1.5** Implement a minimal public-API adapter placeholder.
+- [x] **1.5** Implement a public-API adapter placeholder.
 - [x] **1.6** Implement and test the internal-store adapter.
-- [x] **1.7** Implement and test the timeline adapter when timed lines are available.
+- [x] **1.7** Implement and test the timeline adapter.
 - [x] **1.8** Implement and test the DOM fallback.
-- [x] **1.9** Confirm behavior while Cider is minimized and while the lyric view is closed.
-- [x] **1.10** Add sanitized fixtures for every observed Cider shape.
-- [x] **1.11** Document findings, limitations, and selected adapter priority in `docs/cider-research.md`.
-- [x] **1.12** Run extraction-specific checks and record evidence.
-- [x] **Phase 1 complete or blocked** — The extraction gate is satisfied, or the exact external blocker is documented.
+- [x] **1.9** Confirm minimized and closed lyric-view behavior.
+- [x] **1.10** Add sanitized fixtures.
+- [x] **1.11** Document findings, limitations, and adapter priority.
+- [x] **1.12** Run extraction-specific checks.
+- [x] **Phase 1 complete or blocked**.
 
 ### Phase 2 — Protocol package
 
-**Model:** GPT-5.6 Terra — High  
-**Scope:** Shared protocol, schemas, fixtures, validation, and protocol documentation only.
+**Historical model:** GPT-5.6 Terra — High
 
-- [x] **2.1** Define protocol version constants and shared enums.
-- [x] **2.2** Define track, lyric-line, playback, state, and WebSocket envelope types.
+- [x] **2.1** Define protocol constants and enums.
+- [x] **2.2** Define state and WebSocket types.
 - [x] **2.3** Implement runtime schemas and normalization.
-- [x] **2.4** Enforce text, payload-size, timestamp, sequence, and session rules.
-- [x] **2.5** Add valid and invalid protocol fixtures.
+- [x] **2.4** Enforce payload, timestamp, sequence, session, and text rules.
+- [x] **2.5** Add valid and invalid fixtures.
 - [x] **2.6** Add browser-safe and Bun-safe exports.
-- [x] **2.7** Add complete protocol unit tests.
-- [x] **2.8** Document compatibility and versioning in `docs/protocol.md`.
-- [x] **Phase 2 complete** — All protocol exit criteria and checks pass.
+- [x] **2.7** Add protocol unit tests.
+- [x] **2.8** Document compatibility and versioning.
+- [x] **Phase 2 complete**.
 
 ### Phase 3 — Bridge MVP
 
-**Model:** GPT-5.6 Terra — High  
-**Scope:** Bridge and bridge tests only. Use protocol fixtures; do not implement the production Cider publisher or Plasma UI.
+**Historical model:** GPT-5.6 Terra — High
 
-- [x] **3.1** Implement configuration and loopback-only host validation.
-- [x] **3.2** Implement secure publisher-token creation, storage, display, and rotation.
-- [x] **3.3** Implement authenticated `POST /v1/state` and `DELETE /v1/state`.
-- [x] **3.4** Implement `GET /v1/state` and `GET /health`.
-- [x] **3.5** Implement the in-memory state store, sequence handling, and duplicate suppression.
-- [x] **3.6** Implement WebSocket handshake, cached-state delivery, broadcasts, ping/pong, and client limits.
-- [x] **3.7** Implement state expiry and publisher heartbeat behavior.
-- [x] **3.8** Implement rate limiting, payload limits, and safe structured logging.
-- [x] **3.9** Implement the bridge CLI and graceful shutdown.
-- [x] **3.10** Add bridge unit and process-level integration tests.
-- [x] **3.11** Verify a mock publisher and client can complete the full state lifecycle.
-- [x] **Phase 3 complete** — All bridge exit criteria and checks pass.
+- [x] **3.1** Implement configuration and loopback-only validation.
+- [x] **3.2** Implement publisher-token lifecycle.
+- [x] **3.3** Implement authenticated state publication and clearing.
+- [x] **3.4** Implement state and health reads.
+- [x] **3.5** Implement state storage, sequencing, and duplicate suppression.
+- [x] **3.6** Implement WebSocket lifecycle and client limits.
+- [x] **3.7** Implement expiry and heartbeat behavior.
+- [x] **3.8** Implement rate limits, payload limits, and safe logging.
+- [x] **3.9** Implement the CLI and graceful shutdown.
+- [x] **3.10** Add bridge unit and process integration tests.
+- [x] **3.11** Verify the mock publisher/client lifecycle.
+- [x] **Phase 3 complete**.
 
 ### Phase 4 — Cider plugin MVP
 
-**Model:** GPT-5.6 Terra — High  
-**Scope:** Production Cider plugin and bridge publication only. Do not implement or style the Plasma widget.
+**Historical model:** GPT-5.6 Terra — High
 
-- [x] **4.1** Implement deterministic plugin setup, teardown, and hot-reload cleanup.
-- [x] **4.2** Implement normalized playback metadata and playback-state observation.
-- [x] **4.3** Integrate the selected lyric adapters and fallback strategy from Phase 1.
+- [x] **4.1** Implement deterministic lifecycle cleanup.
+- [x] **4.2** Implement playback metadata and state observation.
+- [x] **4.3** Integrate lyric adapters and fallback.
 - [x] **4.4** Implement the plugin state machine.
-- [x] **4.5** Implement track-change, seek, pause, resume, stop, and stale-line handling.
-- [x] **4.6** Implement the authenticated bridge client.
-- [x] **4.7** Implement ordered publication, deduplication, heartbeat, retry, and backoff.
-- [x] **4.8** Add plugin settings, token handling, source override, and connection testing.
-- [x] **4.9** Add redacted diagnostics and compatibility reporting.
-- [x] **4.10** Add plugin unit tests using Phase 1 fixtures.
-- [x] **4.11** Verify no duplicate observers survive reload and bridge downtime does not affect Cider.
-- [x] **Phase 4 complete** — All plugin exit criteria and checks pass.
+- [x] **4.5** Handle track change, seek, pause, resume, stop, and stale lines.
+- [x] **4.6** Implement the bridge client.
+- [x] **4.7** Implement publication ordering, deduplication, heartbeat, retry, and backoff.
+- [x] **4.8** Add settings and connection testing.
+- [x] **4.9** Add redacted diagnostics.
+- [x] **4.10** Add plugin tests.
+- [x] **4.11** Verify reload cleanup and bridge downtime behavior.
+- [x] **Phase 4 complete**.
 
 ### Phase 5 — Plasma widget MVP
 
-**Model:** GPT-5.6 Terra — High  
-**Scope:** Plasma 6 widget and widget-specific tests only. Do not begin packaging or broad integration hardening.
+**Historical model:** GPT-5.6 Terra — High
 
-- [x] **5.1** Create valid Plasma 6 metadata and package structure.
-- [x] **5.2** Implement the QML WebSocket client and protocol handshake.
-- [x] **5.3** Implement message validation, cached state, ping/pong, and reconnection backoff.
-- [x] **5.4** Implement the compact horizontal-panel representation.
+- [x] **5.1** Create valid Plasma 6 package structure.
+- [x] **5.2** Implement the WebSocket client and handshake.
+- [x] **5.3** Implement validation, cached state, ping/pong, and reconnection.
+- [x] **5.4** Implement the horizontal compact representation.
 - [x] **5.5** Implement safe vertical-panel behavior.
-- [x] **5.6** Implement the popup with track and adjacent-line context.
-- [x] **5.7** Implement fallback priority for paused, stopped, instrumental, unavailable, and disconnected states.
-- [x] **5.8** Implement connection, appearance, content, and diagnostic settings.
-- [x] **5.9** Add `i18n()`, accessibility, theme awareness, high-DPI, RTL, and Unicode handling.
-- [x] **5.10** Add optional subtle transitions without continuous animation.
-- [x] **5.11** Run `qmllint`, fixture tests, and available `plasmoidviewer` checks.
-- [x] **Phase 5 complete** — All widget exit criteria and checks pass.
+- [x] **5.6** Implement the popup.
+- [x] **5.7** Implement fallback display states.
+- [x] **5.8** Implement settings.
+- [x] **5.9** Add localization, accessibility, themes, high-DPI, RTL, and Unicode handling.
+- [x] **5.10** Add optional transitions.
+- [x] **5.11** Run QML and widget checks.
+- [x] **Phase 5 complete**.
 
 ### Phase 6 — Integration hardening
 
-**Model:** GPT-5.6 Sol — High  
-**Scope:** End-to-end reliability, compatibility, performance, security verification, and bug fixing. Do not prepare release artifacts yet.
+**Default continuation model:** GPT-5.6 Terra — Medium  
+**Escalation:** GPT-5.6 Sol — High only for an unexplained cross-component defect
 
-- [ ] **6.1** Execute and document the full end-to-end scenario matrix. BLOCKED — the suspend/resume row needs a user-present manual wake.
-- [x] **6.2** Measure extraction-to-display latency and meet the 250 ms target under normal conditions.
-- [x] **6.3** Harden adapter fallback and Cider compatibility detection.
-- [x] **6.4** Verify minimized Cider and closed lyric-view behavior.
-- [x] **6.5** Verify pause, resume, rapid seek, rapid skip, repeated lines, replay, and no-lyrics cases.
-- [ ] **6.6** Verify independent bridge, plugin, Plasma, and system-session restarts. BLOCKED — a true Plasma logout requires the user to log back in and would terminate the active GUI development session.
-- [ ] **6.7** Verify suspend/resume and multiple widget instances. BLOCKED — two real widget instances pass, but RTC-timed automatic wake requires a sudo password, so the user must be present for real suspend/resume.
-- [x] **6.8** Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines.
-- [x] **6.9** Audit loopback binding, authentication, schema validation, logging, and lyric persistence.
-- [x] **6.10** Fix leaks, stale timers, unbounded queues, and recovery defects.
-- [x] **6.11** Update compatibility and manual-test documentation.
-- [ ] **Phase 6 complete** — Integration, security, performance, and compatibility criteria pass.
+#### Phase 6A — Automated hardening: complete
+
+- [x] **6.2** Measure latency and meet the 250 ms target.
+- [x] **6.3** Harden adapter fallback and compatibility detection.
+- [x] **6.4** Verify minimized and closed lyric-view behavior.
+- [x] **6.5** Verify playback edge cases.
+- [x] **6.8** Test themes, orientations, font/DPI scaling, RTL, and long lines.
+- [x] **6.9** Audit security and persistence behavior.
+- [x] **6.10** Fix leaks, stale timers, queues, and recovery defects.
+- [x] **6.11** Update compatibility and test documentation.
+
+#### Phase 6B — Manual desktop acceptance: blocked
+
+- [ ] **6.1** Complete the end-to-end scenario matrix. BLOCKED — suspend/resume needs a user-present wake.
+- [ ] **6.6** Verify all restart scenarios. BLOCKED — Plasma logout requires the user to log back in.
+- [ ] **6.7** Verify suspend/resume and multiple widgets. BLOCKED — multiple widgets pass; suspend/resume needs the user present.
+- [ ] **Phase 6 complete**.
 
 ### Phase 7 — Packaging and installation
 
-**Model:** GPT-5.6 Terra — Medium  
-**Scope:** Packaging, installers, service files, release automation, and installation documentation only.
+**Default model:** GPT-5.6 Terra — Medium
 
-- [ ] **7.1** Finalize and validate the hardened systemd user service.
-- [ ] **7.2** Implement local installation, upgrade, uninstall, and `--purge` behavior.
-- [ ] **7.3** Package the Cider Marketplace plugin archive.
-- [ ] **7.4** Package the Plasma widget archive.
+- [ ] **7.1** Finalize the systemd user service.
+- [ ] **7.2** Implement install, upgrade, uninstall, and `--purge`.
+- [ ] **7.3** Package the Cider plugin.
+- [ ] **7.4** Package the Plasma widget.
 - [ ] **7.5** Build the bridge release artifact.
-- [ ] **7.6** Generate checksums and a combined release archive.
-- [ ] **7.7** Add environment verification and post-install health checks.
-- [ ] **7.8** Add installation, upgrade, uninstall, and troubleshooting documentation.
+- [ ] **7.6** Generate checksums and the combined archive.
+- [ ] **7.7** Add environment and post-install checks.
+- [ ] **7.8** Add installation and troubleshooting documentation.
 - [ ] **7.9** Add and test the release workflow.
-- [ ] **7.10** Add the optional Arch `PKGBUILD` only after manual packaging works.
-- [ ] **7.11** Verify clean installation, upgrade preservation, service startup, and uninstall behavior.
-- [ ] **Phase 7 complete** — All packaging and installation exit criteria pass.
+- [ ] **7.10** Add the optional Arch `PKGBUILD` after manual packaging works.
+- [ ] **7.11** Verify clean install, upgrade, startup, and uninstall.
+- [ ] **Phase 7 complete**.
 
 ### Phase 8 — Release readiness
 
-**Model:** GPT-5.6 Sol — High  
-**Scope:** Final review, compatibility verification, release validation, and `v0.1.0` preparation only.
+**Default model:** GPT-5.6 Terra — High  
+**Use Sol High for:** 8.3, 8.4, 8.6, or an unexplained final acceptance failure
 
 - [ ] **8.1** Verify licenses and bundled assets.
-- [ ] **8.2** Finalize versions across all components and artifacts.
-- [ ] **8.3** Verify current stable Cider compatibility and record exact limitations.
-- [ ] **8.4** Verify current supported Plasma 6 compatibility.
-- [ ] **8.5** Remove or disable development endpoints, unsafe flags, and verbose diagnostics.
-- [ ] **8.6** Complete final architecture, privacy, security, and dependency reviews.
-- [ ] **8.7** Run the complete CI and acceptance suite from a clean checkout.
-- [ ] **8.8** Install and test final release artifacts on a clean target environment.
-- [ ] **8.9** Prepare screenshots, release notes, checksums, and known limitations.
-- [ ] **8.10** Tag and prepare `v0.1.0` only after all required criteria pass.
-- [ ] **Phase 8 complete** — The implementation plan is complete; do not begin future-work features.
+- [ ] **8.2** Finalize versions.
+- [ ] **8.3** Verify current Cider compatibility.
+- [ ] **8.4** Verify current Plasma 6 compatibility.
+- [ ] **8.5** Remove or disable development-only behavior.
+- [ ] **8.6** Complete architecture, privacy, security, and dependency reviews.
+- [ ] **8.7** Run CI and acceptance tests from a clean checkout.
+- [ ] **8.8** Test final artifacts on a clean target.
+- [ ] **8.9** Prepare screenshots, release notes, checksums, and limitations.
+- [ ] **8.10** Tag and prepare `v0.1.0` after all criteria pass.
+- [ ] **Phase 8 complete** — Do not begin future-work features.
 
 ---
 
 ## Phase workflow
 
-- Implement exactly one phase per user request: the first phase not marked complete.
-- Mark the phase `in_progress` before implementation.
-- Work from the first actionable unchecked task in that phase.
-- Do not implement, scaffold, or partially start later phases.
-- Finish every applicable checklist item and exit criterion for the active phase.
-- Run required checks, fix phase-related failures, and update documentation.
-- Mark a phase `complete` only when all required items are checked and evidence is recorded.
-- Use `blocked` only for a concrete external blocker that cannot be resolved in the current environment.
-- End with the required handoff report and stop. Never continue automatically.
+- Work from the first actionable unchecked task in the first incomplete phase.
+- Do not start later phases.
+- Apply task-based model routing instead of locking every continuation to the phase’s historical model.
+- Run the smallest relevant checks during a focused batch; run the full suite before phase completion or after broad cross-component changes.
+- Mark `blocked` only for a concrete external blocker.
+- End with the handoff report and stop.
+
+### Disruptive execution gates
+
+Before Phase 6B, confirm the user is present, can wake the machine, can log back into Plasma, accepts GUI-session termination, and has a safe worktree.
+
+When a gate is missing, do not rerun passing checks, investigate speculative workarounds, or modify code. Record the blocker once and stop with the exact required user action.
 
 ---
 
-## Resume protocol for a new chat or agent
+## Resume protocol
 
-At the beginning of every new thread:
+At the start of a new session:
 
-1. Read the source-of-truth files in the required order.
+1. Read `AGENTS.md` and only the current phase sections of the two source documents.
 2. Run:
 
    ```bash
    git status --short --branch
-   git log -5 --oneline --decorate
+   git log --oneline --decorate <last-verified-commit>..HEAD
    ```
 
-3. Inspect uncommitted changes without discarding or overwriting them.
-4. Confirm that the persistent checkpoint, master checklist, phase journal, Git history, and implementation agree.
-5. Run the smallest relevant validation needed to confirm the last completed task when its state is uncertain.
-6. Update the persistent checkpoint if it is stale.
-7. Continue from the first actionable unchecked task in the current phase.
-8. Do not ask the user where development stopped unless repository evidence is genuinely insufficient.
-9. Do not repeat completed tasks merely because the conversation is new.
-10. Never reset, clean, stash, amend, or discard existing work without explicit user instruction.
+   Use `git log -5 --oneline --decorate` when there are no later commits.
 
-Use this continuation instruction when needed:
+3. Inspect uncommitted changes without modifying them.
+4. Reconcile only material inconsistencies.
+5. Run the smallest relevant validation when prior state is uncertain.
+6. Continue from the first actionable unchecked task.
+7. Never reset, clean, stash, amend, or discard work without explicit instruction.
+
+Continuation prompt template:
 
 ```text
-Continue the KLyric implementation. Read AGENTS.md,
-KLYRIC_IMPLEMENTATION_PLAN.md, docs/phase-status.md, Git status, and recent
-commits. Reconcile the persistent checkpoint with the repository, implement
-only the first actionable unchecked task in the current phase, finish the
-phase when possible, validate it, update all status records, provide the
-required handoff report, and stop before the next phase.
+Continue KLyric from the persistent checkpoint in AGENTS.md. Read only the
+current phase sections of docs/phase-status.md and KLYRIC_IMPLEMENTATION_PLAN.md,
+then inspect Git status and commits since <last verified commit>.
+
+Next task: <exact task>.
+Scope: <files, components, or validation scenario>.
+Do not repeat completed work or begin a later phase. Run the smallest relevant
+checks, update status records once at the end, provide the required handoff with
+the next recommended model and a ready-to-copy prompt, then stop.
 ```
 
 ---
 
-## Model schedule
+## Phase defaults
 
-| Phase | Model | Reasoning |
-|---|---|---|
-| 0 — Repository bootstrap | GPT-5.6 Terra | Medium |
-| 1 — Lyric extraction spike | GPT-5.6 Sol | High |
-| 2 — Protocol package | GPT-5.6 Terra | High |
-| 3 — Bridge MVP | GPT-5.6 Terra | High |
-| 4 — Cider plugin MVP | GPT-5.6 Terra | High |
-| 5 — Plasma widget MVP | GPT-5.6 Terra | High |
-| 6 — Integration hardening | GPT-5.6 Sol | High |
-| 7 — Packaging and installation | GPT-5.6 Terra | Medium |
-| 8 — Release readiness | GPT-5.6 Sol | High |
+Task-based routing takes precedence.
 
-Do not use Max or Ultra by default. When consecutive phases use the same configuration, tell the user to keep it rather than switch.
+| Phase | Default |
+|---|---|
+| 6B — Manual desktop acceptance | Terra Medium; Sol High only after a structured unexplained failure |
+| 7 — Packaging and installation | Terra Medium; Terra High for substantial fixes |
+| 8 — Release readiness | Terra High; Sol High for compatibility, architecture, privacy, security, or unexplained failures |
+
+Do not use Max or Ultra by default. Tell the user to keep the current model when the next task uses the same configuration.
+
+---
+
+## Status and commit policy
+
+Update status files after a focused implementation or validation batch, a material blocker change, or a phase-status change.
+
+Do not create trigger-only, synchronization-only, empty, or temporary-workflow commits. Prefer one implementation commit and at most one meaningful documentation commit per focused session.
+
+Use Conventional Commits and never commit secrets, tokens, local configuration, complete lyric data, generated output, or unrelated changes.
 
 ---
 
 ## Development rules
 
 - Use English for code, documentation, commits, identifiers, and source strings.
-- Use Bun. Do not add npm, pnpm, or Yarn lockfiles.
-- Keep TypeScript strict. Avoid `any`; validate cross-process and Cider-derived data at runtime.
+- Use Bun only.
+- Keep TypeScript strict and validate external data at runtime.
 - Keep undocumented Cider access inside `apps/cider-plugin/src/cider/`.
 - Access lyrics only through `LyricsSource`.
 - Keep the bridge loopback-only, authenticate writes, and never persist lyrics or log tokens.
 - Keep the protocol versioned and backward-compatible within a major version.
-- Use Plasma 6 QML APIs, theme-aware components, accessibility properties, and `i18n()`.
-- Prefer small modules, explicit cleanup, and event-driven updates over frequent polling.
-- Add or update tests for every behavior change and Cider compatibility shape.
-- Avoid dependencies when platform or existing workspace APIs are sufficient.
+- Use Plasma 6 APIs, theme-aware components, accessibility, and `i18n()`.
+- Prefer small modules, explicit cleanup, and event-driven updates.
+- Add or update tests for every behavior change.
+- Avoid unnecessary dependencies.
 - Do not mix unrelated phases in one commit.
 
 ---
 
 ## Required checks
 
-Run before completing every phase:
+Use the smallest checks covering the current change. Before completing a phase or after broad cross-component changes, run:
 
 ```bash
 bun run format
@@ -315,37 +345,14 @@ bun run test
 bun run build
 ```
 
-Run checks that exist for the current repository state. If a command is intentionally unavailable during an early phase, record it as `NOT RUN` with the reason in both the phase journal and final handoff.
-
-For widget changes, also run:
+For widget behavior changes, run the relevant QML checks:
 
 ```bash
 qmllint apps/plasmoid/package/contents/ui/**/*.qml
 plasmoidviewer -a apps/plasmoid/package -l topedge -f horizontal
 ```
 
-Manual GUI validation may be `NOT RUN` only when the environment cannot launch Plasma or Cider. Record the exact user verification still required.
-
----
-
-## Commits
-
-Use Conventional Commits:
-
-```text
-feat(scope): description
-fix(scope): description
-test(scope): description
-docs(scope): description
-refactor(scope): description
-chore(scope): description
-research(scope): description
-release: description
-```
-
-Keep commits focused. Do not commit generated output, secrets, tokens, local configuration, full lyric data, or unrelated changes.
-
-Record the latest verified commit SHA in the persistent checkpoint after committing.
+Do not rerun the full suite for documentation-only changes unless implementation state is uncertain. Record unavailable or gated checks as `NOT RUN` with the exact reason.
 
 ---
 
@@ -357,30 +364,56 @@ End every implementation session with:
 PHASE <number> — <name>: IN PROGRESS | COMPLETE | BLOCKED
 
 Checkpoint:
-- Current task: <task number and name>
-- Last completed task: <task number and name>
-- Last verified commit: <short SHA or "uncommitted">
-- Next exact action: <single concrete action>
+- Current task: <task>
+- Last completed task: <task>
+- Last verified implementation commit: <SHA or "uncommitted">
+- Next exact action: <one action>
 
 Implemented:
 - ...
 
 Validation:
-- <command>: PASS | FAIL | NOT RUN
-- ...
+- <check>: PASS | FAIL | NOT RUN
 
 Status files updated:
-- AGENTS.md: yes
-- docs/phase-status.md: yes
+- AGENTS.md: yes | no, not required
+- docs/phase-status.md: yes | no, not required
 
 Known limitations or blockers:
 - ...
 
-Next phase or continuation:
-- Current/next phase: Phase <number> — <name>
-- Recommended model: GPT-5.6 <model>
-- Reasoning: <level>
-- Action: <keep or change model, then continue from the recorded checkpoint>
+Next model selection:
+- Recommended model: GPT-5.6 <Luna | Terra | Sol>
+- Reasoning: <Low | Medium | High>
+- Why: <one sentence tied to the next action>
+- Escalate to: <model or none>
+- Escalation condition: <specific condition or none>
+
+Ready-to-copy continuation prompt:
+<complete prompt for the next exact task, required context, validation, status
+update, handoff, and stop condition>
 ```
 
-When a phase remains in progress, the report must direct the next agent to the first unchecked task in that same phase. When Phase 8 completes, state that no implementation phase remains.
+When blocked, do not recommend another session until the execution gate is satisfied unless the user explicitly requests separate permitted work.
+
+### Current Phase 6B prompt
+
+Use GPT-5.6 Terra with Medium reasoning after the user confirms the execution gate:
+
+```text
+Continue KLyric Phase 6B from the persistent checkpoint in AGENTS.md. The user
+is present and can wake the machine and log back into Plasma. Verify the worktree
+is safe without resetting, stashing, amending, or discarding anything. Read only
+the Phase 6 sections of docs/phase-status.md and KLYRIC_IMPLEMENTATION_PLAN.md,
+then inspect commits since f00ef43.
+
+Run the remaining scenarios in order: real suspend/resume with the bridge and
+applet active, then a true Plasma logout/login. Confirm applet 53 reconnects
+after both cycles. Do not modify code unless a scenario fails. On failure, stop
+after collecting reproduction steps, redacted logs, affected components, and
+expected versus observed behavior; recommend GPT-5.6 Sol High for diagnosis.
+
+If both pass, record the evidence, complete tasks 6.1, 6.6, 6.7 and Phase 6,
+update both status files once, provide the required handoff with the recommended
+model for Phase 7, and stop before starting Phase 7.
+```
