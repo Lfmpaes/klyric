@@ -23,17 +23,17 @@ When documentation and repository state disagree, inspect the implementation and
 
 > **The agent must update this section whenever work starts, a task is completed, a blocker is discovered, validation changes, or a phase ends.**
 
-- **Current phase:** Phase 2 — Protocol package
+- **Current phase:** Phase 3 — Bridge MVP
 - **Phase status:** `pending`
-- **Current task:** 2.1 — Define protocol version constants and shared enums
+- **Current task:** 3.1 — Implement configuration and loopback-only host validation
 - **Recommended model:** GPT-5.6 Terra
 - **Reasoning:** High
-- **Last completed task:** Phase 1 complete — Lyric extraction spike
-- **Last verified commit:** `59517c3` — first commit
-- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (10 pass), and `bun run build` passed on 2026-07-10. Local git branch metadata was verified on 2026-07-11 with `git status --short --branch` and `git branch -vv`.
+- **Last completed task:** Phase 2 complete — Protocol package
+- **Last verified commit:** `971f53f` — feat(protocol): define validated state schema
+- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (21 pass), and `bun run build` passed on 2026-07-11.
 - **Known blockers:** GitHub remote access is unavailable from this environment: HTTPS returns `404` for `https://github.com/Lfmpaes/klyric` and SSH returns `Permission denied (publickey)`, so the configured upstream cannot be resolved here. Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
-- **Next exact action:** Start Phase 2 at task 2.1 by defining protocol version constants and shared enums.
-- **Last updated:** 2026-07-11 — Local git metadata is present and branch tracking is configured; GitHub remote access remains blocked by authentication.
+- **Next exact action:** Start Phase 3 at task 3.1 by implementing bridge configuration and loopback-only host validation.
+- **Last updated:** 2026-07-11 — Phase 2 completed with versioned types, runtime validation, fixtures, browser/Bun-safe exports, documentation, and all required checks passing; GitHub remote access remains blocked by authentication.
 
 Allowed phase statuses:
 
@@ -99,15 +99,15 @@ Allowed phase statuses:
 **Model:** GPT-5.6 Terra — High  
 **Scope:** Shared protocol, schemas, fixtures, validation, and protocol documentation only.
 
-- [ ] **2.1** Define protocol version constants and shared enums.
-- [ ] **2.2** Define track, lyric-line, playback, state, and WebSocket envelope types.
-- [ ] **2.3** Implement runtime schemas and normalization.
-- [ ] **2.4** Enforce text, payload-size, timestamp, sequence, and session rules.
-- [ ] **2.5** Add valid and invalid protocol fixtures.
-- [ ] **2.6** Add browser-safe and Bun-safe exports.
-- [ ] **2.7** Add complete protocol unit tests.
-- [ ] **2.8** Document compatibility and versioning in `docs/protocol.md`.
-- [ ] **Phase 2 complete** — All protocol exit criteria and checks pass.
+- [x] **2.1** Define protocol version constants and shared enums.
+- [x] **2.2** Define track, lyric-line, playback, state, and WebSocket envelope types.
+- [x] **2.3** Implement runtime schemas and normalization.
+- [x] **2.4** Enforce text, payload-size, timestamp, sequence, and session rules.
+- [x] **2.5** Add valid and invalid protocol fixtures.
+- [x] **2.6** Add browser-safe and Bun-safe exports.
+- [x] **2.7** Add complete protocol unit tests.
+- [x] **2.8** Document compatibility and versioning in `docs/protocol.md`.
+- [x] **Phase 2 complete** — All protocol exit criteria and checks pass.
 
 ### Phase 3 — Bridge MVP
 
