@@ -82,3 +82,19 @@ The internal-store fixture is explicitly a synthetic candidate used to test
 fail-closed normalization and cleanup; it is not claimed as an observed Cider
 3.1.8 shape. The observed fixture contains only selectors, booleans, counts,
 and mechanism names.
+
+## Phase 6 compatibility revalidation
+
+Live revalidation on 2026-07-11 used Cider 3.1.8-1. A synchronized catalog
+track again exposed 79 ordered DOM lines, pause/resume held playback time, a
+15-second seek succeeded, and track replacement rebuilt the lyric DOM with 61
+lines at active index 0. Minimized operation continued with the Lyrics view
+open. Closing Lyrics removed all 61 lines while playback continued, and a
+post-close inspection again found no public API, compatible internal store, or
+complete timeline.
+
+Capability reports now include a validated, content-free descriptor ID. The
+known values are `plugin-kit-public-api`, `candidate-internal-store`,
+`plugin-kit-timeline`, `cider-3.1.8-dom`, and `unsupported`. Detection requires
+the callable and collection shape used by the corresponding adapter; a merely
+named host property is no longer sufficient.

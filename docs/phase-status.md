@@ -10,7 +10,7 @@ As of 2026-07-11, the workspace has a usable local git repository and the `main`
 | 3 — Bridge MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 4 — Cider plugin MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 5 — Plasma widget MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
-| 6 — Integration hardening | pending | GPT-5.6 Sol | High | — |
+| 6 — Integration hardening | in_progress | GPT-5.6 Sol | High | — |
 | 7 — Packaging and installation | pending | GPT-5.6 Terra | Medium | — |
 | 8 — Release readiness | pending | GPT-5.6 Sol | High | — |
 
@@ -370,3 +370,77 @@ are `57b16ea` (`feat(plasmoid): add Plasma widget MVP`) and `2514c02`
 Cider remains part of Phase 6, alongside end-to-end recovery and
 visual scenario coverage. Phase 5 is complete. Phase 6 is next at task 6.1;
 use GPT-5.6 Sol with High reasoning and do not start automatically.
+
+## Phase 6 journal
+
+Started 2026-07-11 at task 6.1. The source-of-truth files, implementation,
+tests, clean `main` worktree, and recent history agree that Phase 6 is the first
+incomplete phase. The persistent checkpoint named `2514c02` as the last
+verified implementation commit, while Git already contained the clean Phase 5
+documentation commit `5565a35`; the checkpoint was corrected before Phase 6
+work began. This session is limited to integration reliability, compatibility,
+performance, security verification, and related defect fixes. Packaging and
+release-artifact work remain out of scope.
+
+Phase 6 automated hardening and available live validation completed on
+2026-07-11, but the phase remains `in_progress` because disruptive desktop
+session scenarios and several visual combinations are still manual. The new
+`tests/integration-hardening.test.ts` pipeline connects the real plugin state
+machine and publication queue to a real loopback bridge, then parses delivery
+through the plasmoid's JavaScript protocol helper. It verifies five
+plugin-to-widget latency samples (1.774 ms maximum), multi-widget broadcast,
+memory-empty bridge restart, immediate cross-process token rotation, and the
+absence of lyric/token sentinels from logs and persisted files.
+
+Adapter and recovery hardening fixed four concrete defects. An in-flight
+failed publication no longer overwrites a newer pending state. The running
+bridge reloads its token before authentication, so CLI rotation invalidates
+the old token immediately. Lyric-source transitions are serialized and failed
+source kinds cannot oscillate back into selection for the same track; the
+failure set resets on track replacement. Capability detection now validates
+public API, store, and timeline shapes and emits a safe descriptor ID. Bridge
+shutdown broadcasts `publisher-disconnected` before closing clients, and the
+plasmoid reconnects when the Qt application becomes active after resume.
+
+The playback state suite now verifies repeated equal lines by index,
+pause/resume, rapid seeks, rapid skips, old-track rejection, replay, no lyrics,
+and instrumental states. Live redacted Cider 3.1.8-1 checks started a
+synchronized catalog track, observed 79 lines and advancing active indexes,
+held time across pause/resume, completed a 15-second seek, replaced the track
+with a 61-line DOM reset to index 0, and continued while minimized. Closing
+Lyrics removed all 61 lines while playback continued; a post-close inspection
+again detected no public API, store, or timeline. The hardened installed build
+reported descriptor `unsupported` while idle, as expected.
+
+The upgraded widget remained loaded under `plasmawindowed` for 10 seconds at
+normal scaling, five seconds at 150%, and five seconds at 200% with RTL layout,
+all on Breeze Dark. `docs/integration-testing.md` records all 20 end-to-end
+rows, the visual/session matrix, exact latency samples, compatibility table,
+security audit, and remaining manual checks. The unresolved checks are a
+several-minute live pause, real suspend/resume with two widgets, a Plasma
+session restart, real horizontal/vertical panels, Breeze Light, and font-size
+extremes. `plasmoidviewer` is not installed, and suspending or restarting the
+active user session was intentionally not triggered automatically.
+
+Validation after the Phase 6 changes:
+
+- `bun run format`: PASS
+- `bun run lint`: PASS
+- `bun run typecheck`: PASS
+- `bun run test`: PASS — 59 tests, 0 failures, with normal loopback access
+- `bun run build`: PASS
+- `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`: PASS
+- `KLYRIC_REPORT_PERF=1 bun test tests/integration-hardening.test.ts -t 'propagates extraction events'`: PASS — five samples, 1.774 ms maximum
+- `kpackagetool6 --type Plasma/Applet --upgrade apps/plasmoid/package`: PASS
+- `plasmawindowed dev.luizpaes.klyric`: PASS — 100%, 150%, and 200%/RTL smoke runs
+- `bun run --cwd apps/cider-plugin inspect:cider`: PASS — installed hardened build and live redacted scenario actions
+- `git diff --check`: PASS
+
+Tasks 6.2 through 6.5 and 6.9 through 6.11 are complete. Tasks 6.1, 6.6,
+6.7, and 6.8 remain incomplete pending the manual rows above. The exact resume
+point is task 6.1: run suspend/resume with Cider, bridge, and two live widget
+instances, then record the result in `docs/integration-testing.md` before
+continuing the remaining manual matrix.
+The implementation and automated integration commit is `9ab1f30`
+(`fix(integration): harden recovery and compatibility`). Documentation and
+checkpoint updates remain staged for the follow-up documentation commit.

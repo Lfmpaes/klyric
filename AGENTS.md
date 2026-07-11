@@ -24,16 +24,16 @@ When documentation and repository state disagree, inspect the implementation and
 > **The agent must update this section whenever work starts, a task is completed, a blocker is discovered, validation changes, or a phase ends.**
 
 - **Current phase:** Phase 6 — Integration hardening
-- **Phase status:** `pending`
+- **Phase status:** `in_progress`
 - **Current task:** 6.1 — Execute and document the full end-to-end scenario matrix
 - **Recommended model:** GPT-5.6 Sol
 - **Reasoning:** High
-- **Last completed task:** Phase 5 complete — Plasma widget MVP
-- **Last verified commit:** `2514c02` — fix(plasmoid): animate lyric text changes
-- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (50 pass), `bun run build`, `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`, `kpackagetool6 --type Plasma/Applet --show apps/plasmoid/package`, `plasmawindowed dev.luizpaes.klyric` (10-second smoke test), and `git diff --check` passed on 2026-07-11. Bridge integration tests were rerun with normal local loopback access because restricted-sandbox port binds fail.
-- **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
-- **Next exact action:** Begin Phase 6 at task 6.1 by executing the documented end-to-end scenario matrix; do not start automatically.
-- **Last updated:** 2026-07-11 — Phase 5 completed with a Plasma 6 package, validated bridge WebSocket client, fixture coverage, panel and popup representations, configuration, accessibility, and runtime smoke validation.
+- **Last completed task:** 6.11 — Update compatibility and manual-test documentation
+- **Last verified commit:** `9ab1f30` — fix(integration): harden recovery and compatibility
+- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (59 pass), `bun run build`, `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`, instrumented latency (five samples, 1.774 ms maximum), live redacted Cider 3.1.8 playback/lyrics/minimize/closed-view checks, `kpackagetool6 --type Plasma/Applet --upgrade apps/plasmoid/package`, `plasmawindowed dev.luizpaes.klyric` at 100%, 150%, and 200%/RTL, and `git diff --check` passed on 2026-07-11. Loopback tests used normal local access because the restricted sandbox blocks port binds.
+- **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. `plasmoidviewer` is unavailable, and completing suspend/resume, Plasma-session restart, real vertical-panel, Breeze Light, and font-extreme checks requires disruptive manual interaction with the active desktop session.
+- **Next exact action:** Complete task 6.1 by running the documented suspend/resume scenario with Cider, the bridge, and two live widget instances active.
+- **Last updated:** 2026-07-11 — Phase 6 automated hardening, live Cider checks, latency measurement, security audit, fixes, and documentation completed; disruptive/manual scenario rows remain.
 
 Allowed phase statuses:
 
@@ -169,16 +169,16 @@ Allowed phase statuses:
 **Scope:** End-to-end reliability, compatibility, performance, security verification, and bug fixing. Do not prepare release artifacts yet.
 
 - [ ] **6.1** Execute and document the full end-to-end scenario matrix.
-- [ ] **6.2** Measure extraction-to-display latency and meet the 250 ms target under normal conditions.
-- [ ] **6.3** Harden adapter fallback and Cider compatibility detection.
-- [ ] **6.4** Verify minimized Cider and closed lyric-view behavior.
-- [ ] **6.5** Verify pause, resume, rapid seek, rapid skip, repeated lines, replay, and no-lyrics cases.
+- [x] **6.2** Measure extraction-to-display latency and meet the 250 ms target under normal conditions.
+- [x] **6.3** Harden adapter fallback and Cider compatibility detection.
+- [x] **6.4** Verify minimized Cider and closed lyric-view behavior.
+- [x] **6.5** Verify pause, resume, rapid seek, rapid skip, repeated lines, replay, and no-lyrics cases.
 - [ ] **6.6** Verify independent bridge, plugin, Plasma, and system-session restarts.
 - [ ] **6.7** Verify suspend/resume and multiple widget instances.
 - [ ] **6.8** Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines.
-- [ ] **6.9** Audit loopback binding, authentication, schema validation, logging, and lyric persistence.
-- [ ] **6.10** Fix leaks, stale timers, unbounded queues, and recovery defects.
-- [ ] **6.11** Update compatibility and manual-test documentation.
+- [x] **6.9** Audit loopback binding, authentication, schema validation, logging, and lyric persistence.
+- [x] **6.10** Fix leaks, stale timers, unbounded queues, and recovery defects.
+- [x] **6.11** Update compatibility and manual-test documentation.
 - [ ] **Phase 6 complete** — Integration, security, performance, and compatibility criteria pass.
 
 ### Phase 7 — Packaging and installation
