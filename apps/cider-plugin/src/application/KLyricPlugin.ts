@@ -247,6 +247,7 @@ export class KLyricPlugin {
     const signal = this.lyricsSignal;
     if (!this.started || factory === undefined || signal === undefined) return;
     this.ignoreUnidentifiedLyrics = true;
+    factory.resetFailures();
     await this.startLyrics(factory, signal);
   }
 }

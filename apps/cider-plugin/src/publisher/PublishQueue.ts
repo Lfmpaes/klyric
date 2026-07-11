@@ -91,7 +91,9 @@ export class PublishQueue {
           this.onConnection(false);
           this.onError(normalized);
           if (!isRetryable(normalized)) break;
-          this.pending = state;
+          // A state may have arrived while this request was in flight. Keep
+          // that newest state instead of restoring the failed, stale one.
+          this.pending ??= state;
           this.scheduleRetry();
           break;
         }

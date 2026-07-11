@@ -32,6 +32,7 @@ describe("redacted capability inspection", () => {
 
     expect(report).toEqual({
       schemaVersion: 1,
+      descriptorId: "candidate-internal-store",
       capabilities: {
         publicLyricsApi: false,
         internalLyricsStore: true,
@@ -49,6 +50,27 @@ describe("redacted capability inspection", () => {
     expect(
       redactUnknown({ token: "private", nested: { lyricText: "private" } }),
     ).toEqual({ token: "[redacted]", nested: { lyricText: "[redacted]" } });
+  });
+
+  test("validates public and timeline capability shapes before selecting a descriptor", () => {
+    expect(
+      inspectCiderCapabilities({ PluginKit: { lyrics: {} } }).descriptorId,
+    ).toBe("unsupported");
+    expect(
+      inspectCiderCapabilities({
+        PluginKit: {
+          lyricsTimeline: {
+            getLines() {},
+            getPositionMs() {},
+            isPlaying() {},
+            subscribe() {},
+          },
+        },
+      }),
+    ).toMatchObject({
+      descriptorId: "plugin-kit-timeline",
+      capabilities: { timedLyricsAvailable: true },
+    });
   });
 });
 
@@ -210,5 +232,38 @@ describe("source factory", () => {
 
     expect((await factory.startBest(context([])))?.kind).toBe("timeline");
     expect(order).toEqual(["public-api", "timeline"]);
+  });
+
+  test("does not oscillate back to adapters that failed on the current track", async () => {
+    const starts: string[] = [];
+    const source = (
+      kind: LyricsSource["kind"],
+      confidence: number,
+    ): LyricsSource => ({
+      kind,
+      confidence,
+      async canStart() {
+        return true;
+      },
+      async start() {
+        starts.push(kind);
+      },
+      async stop() {},
+    });
+    const timeline = source("timeline", 80);
+    const dom = source("dom", 60);
+    const factory = new LyricsSourceFactory([timeline, dom]);
+
+    expect((await factory.startBest(context([])))?.kind).toBe("timeline");
+    expect((await factory.startFallback(context([]), timeline))?.kind).toBe(
+      "dom",
+    );
+    expect(await factory.startFallback(context([]), dom)).toBeNull();
+    expect(starts).toEqual(["timeline", "dom"]);
+
+    factory.resetFailures();
+    expect((await factory.startBest(context([])))?.kind).toBe("timeline");
+    expect(starts).toEqual(["timeline", "dom", "timeline"]);
+    await factory.stop();
   });
 });
