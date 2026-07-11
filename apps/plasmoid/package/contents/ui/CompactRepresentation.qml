@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 
@@ -19,12 +20,23 @@ Item {
     property string fontWeight: "normal"
     property bool animationsEnabled: true
 
+    readonly property int iconOnlyWidth: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing * 2
     readonly property int effectiveMaximumWidth: Math.max(Kirigami.Units.gridUnit * 8, maximumWidth)
-    readonly property int effectiveMinimumWidth: Math.min(effectiveMaximumWidth, Math.max(0, minimumWidth))
-    implicitWidth: showText ? Math.max(effectiveMinimumWidth, Math.min(effectiveMaximumWidth, row.implicitWidth + Kirigami.Units.smallSpacing * 2))
-                            : Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing * 2
+    readonly property int effectiveMinimumWidth: Math.min(effectiveMaximumWidth, Math.max(iconOnlyWidth, minimumWidth))
+    readonly property int preferredPanelWidth: showText ? effectiveMaximumWidth : iconOnlyWidth
+
+    // Plasma panel containments size compact representations through Qt Quick
+    // Layout hints. Relying only on implicitWidth allows the applet to collapse
+    // to an icon-sized square before the lyric label receives usable width.
+    implicitWidth: preferredPanelWidth
     implicitHeight: Math.max(Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing,
                              lyricLabel.implicitHeight + Kirigami.Units.smallSpacing * 2)
+    Layout.minimumWidth: showText ? effectiveMinimumWidth : iconOnlyWidth
+    Layout.preferredWidth: preferredPanelWidth
+    Layout.maximumWidth: showText ? effectiveMaximumWidth : iconOnlyWidth
+    Layout.fillHeight: true
+    clip: true
+
     Accessible.name: displayText
     Accessible.description: tooltipText
 
@@ -49,7 +61,7 @@ Item {
         }
     }
 
-    Row {
+    RowLayout {
         id: row
         anchors.fill: parent
         anchors.margins: Kirigami.Units.smallSpacing
@@ -59,34 +71,36 @@ Item {
         Kirigami.Icon {
             visible: compact.showMusicIcon || !compact.showText
             source: "view-media-lyrics"
-            width: Kirigami.Units.iconSizes.smallMedium
-            height: width
-            anchors.verticalCenter: parent.verticalCenter
+            Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+            Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+            Layout.alignment: Qt.AlignVCenter
         }
 
         PlasmaComponents.Label {
             id: lyricLabel
             visible: compact.showText
-            width: Math.max(0, parent.width - x - (connectionBadge.visible ? connectionBadge.width + parent.spacing : 0))
-            anchors.verticalCenter: parent.verticalCenter
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
+            Layout.alignment: Qt.AlignVCenter
             text: compact.displayText
+            textFormat: Text.PlainText
             elide: Text.ElideRight
             maximumLineCount: Math.max(1, Math.min(2, compact.visibleLines))
             wrapMode: maximumLineCount > 1 ? Text.Wrap : Text.NoWrap
+            verticalAlignment: Text.AlignVCenter
             horizontalAlignment: compact.alignment === "center" ? Text.AlignHCenter : compact.alignment === "right" ? Text.AlignRight : Text.AlignLeft
             font.pixelSize: Math.max(1, Kirigami.Theme.defaultFont.pixelSize + compact.fontSizeAdjustment)
             font.weight: compact.fontWeight === "bold" ? Font.Bold : compact.fontWeight === "medium" ? Font.Medium : Font.Normal
             Accessible.name: compact.displayText
-
         }
 
         Rectangle {
             id: connectionBadge
             visible: compact.showConnectionBadge
-            width: Kirigami.Units.smallSpacing
-            height: width
+            Layout.preferredWidth: Kirigami.Units.smallSpacing
+            Layout.preferredHeight: Kirigami.Units.smallSpacing
+            Layout.alignment: Qt.AlignVCenter
             radius: width / 2
-            anchors.verticalCenter: parent.verticalCenter
             color: compact.connectionState === "connected" ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
             Accessible.name: compact.connectionState === "connected" ? i18n("Bridge connected") : i18n("Bridge disconnected")
         }

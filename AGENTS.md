@@ -26,14 +26,16 @@ When documentation and repository state disagree, inspect the implementation and
 - **Current phase:** Phase 6 — Integration hardening
 - **Phase status:** `in_progress`
 - **Current task:** 6.1 — Execute and document the full end-to-end scenario matrix
+- **Current validation focus:** 6.8 — Verify that draft PR #1 displays lyric text directly in a real horizontal Plasma panel
 - **Recommended model:** GPT-5.6 Sol
 - **Reasoning:** High
 - **Last completed task:** 6.11 — Update compatibility and manual-test documentation
-- **Last verified commit:** `dc15731` — docs(phase): record integration hardening matrix
-- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (59 pass), `bun run build`, `qmllint apps/plasmoid/package/contents/ui/**/*.qml apps/plasmoid/package/contents/config/*.qml apps/plasmoid/package/contents/ui/js/*.js`, instrumented latency (five samples, 1.774 ms maximum), live redacted Cider 3.1.8 playback/lyrics/minimize/closed-view checks, `kpackagetool6 --type Plasma/Applet --upgrade apps/plasmoid/package`, `plasmawindowed dev.luizpaes.klyric` at 100%, 150%, and 200%/RTL, and `git diff --check` passed on 2026-07-11. Loopback tests used normal local access because the restricted sandbox blocks port binds.
-- **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. `plasmoidviewer` is unavailable, and completing suspend/resume, Plasma-session restart, real vertical-panel, Breeze Light, and font-extreme checks requires disruptive manual interaction with the active desktop session.
-- **Next exact action:** Complete task 6.1 by running the documented suspend/resume scenario with Cider, the bridge, and two live widget instances active.
-- **Last updated:** 2026-07-11 — Phase 6 automated hardening, live Cider checks, latency measurement, security audit, fixes, and documentation completed; disruptive/manual scenario rows remain.
+- **Last verified implementation commit:** `9281dc1` — docs(plasmoid): document taskbar lyric layout
+- **Open pull request:** Draft PR #1 — `fix(plasmoid): show lyric text in horizontal panels`
+- **Last validation:** Previous Phase 6 checks passed on 2026-07-11, and CI passed for the panel-layout branch at `c9fcbfb`. Real horizontal-panel validation remains pending.
+- **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. `plasmoidviewer` is unavailable, and completing real horizontal-panel validation, suspend/resume, Plasma-session restart, real vertical-panel, Breeze Light, and font-extreme checks requires interaction with the active desktop session.
+- **Next exact action:** Install draft PR #1, validate lyric and fallback text directly in a real horizontal Plasma panel using `docs/plasma-panel-layout.md`, record the result in `docs/phase-status.md`, and then continue the remaining Phase 6 scenarios.
+- **Last updated:** 2026-07-11 — Recorded the horizontal-panel sizing fix and pending real-panel validation without changing the implementation checklist structure.
 
 Allowed phase statuses:
 
@@ -175,7 +177,7 @@ Allowed phase statuses:
 - [x] **6.5** Verify pause, resume, rapid seek, rapid skip, repeated lines, replay, and no-lyrics cases.
 - [ ] **6.6** Verify independent bridge, plugin, Plasma, and system-session restarts.
 - [ ] **6.7** Verify suspend/resume and multiple widget instances.
-- [ ] **6.8** Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines.
+- [ ] **6.8** Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines. The horizontal-panel sizing fix is implemented in draft PR #1; real-panel validation remains pending.
 - [x] **6.9** Audit loopback binding, authentication, schema validation, logging, and lyric persistence.
 - [x] **6.10** Fix leaks, stale timers, unbounded queues, and recovery defects.
 - [x] **6.11** Update compatibility and manual-test documentation.
