@@ -20,6 +20,11 @@ PlasmoidItem {
     property bool helloReceived: false
     property var pendingStoppedState: null
 
+    // Plasma 6 exposes applet settings through the Plasmoid singleton. The
+    // unqualified `configuration` object used by older examples is not
+    // injected into this root context in a real panel containment.
+    readonly property var configuration: Plasmoid.configuration
+
     readonly property string bridgeUrl: "ws://" + configuration.bridgeHost + ":" + configuration.bridgePort + "/v1/events"
     readonly property bool verticalPanel: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property bool shouldHide: (configuration.hideWhenStopped && lyricState && lyricState.playbackStatus === "stopped")
@@ -201,7 +206,7 @@ PlasmoidItem {
         id: socket
         url: root.bridgeUrl
         active: false
-        onStatusChanged: {
+        onStatusChanged: function(status) {
             if (status === WebSocket.Open) {
                 root.connectionState = "connected"
                 root.connectedAt = Date.now()
@@ -215,7 +220,7 @@ PlasmoidItem {
                 root.scheduleReconnect()
             }
         }
-        onErrorStringChanged: {
+        onErrorStringChanged: function(errorString) {
             if (errorString.length > 0)
                 root.bridgeError = errorString
         }

@@ -38,7 +38,7 @@ Item {
                 var track = popup.lyricState.track
                 return track.title && track.artist ? track.title + " — " + track.artist : (track.title || track.artist || "")
             }
-            font: Kirigami.Theme.headingFont
+            font.bold: true
             elide: Text.ElideRight
             wrapMode: Text.Wrap
         }
@@ -54,7 +54,7 @@ Item {
         PlasmaComponents.Label {
             Layout.fillWidth: true
             text: popup.displayText
-            font: Kirigami.Theme.headingFont
+            font.bold: true
             wrapMode: Text.Wrap
             Accessible.name: i18n("Current lyric: %1", popup.displayText)
         }

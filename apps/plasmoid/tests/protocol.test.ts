@@ -130,3 +130,26 @@ test("the QML formatting helper follows the configured fallback priority", () =>
     "KLyric bridge unavailable",
   );
 });
+
+test("the Plasma runtime wires settings and translations through supported contexts", () => {
+  const mainQml = readFileSync(
+    resolve(import.meta.dir, "../package/contents/ui/main.qml"),
+    "utf8",
+  );
+  const formattingJs = readFileSync(
+    resolve(import.meta.dir, "../package/contents/ui/js/Formatting.js"),
+    "utf8",
+  );
+  const fullRepresentationQml = readFileSync(
+    resolve(import.meta.dir, "../package/contents/ui/FullRepresentation.qml"),
+    "utf8",
+  );
+
+  expect(mainQml).toContain(
+    "readonly property var configuration: Plasmoid.configuration",
+  );
+  expect(mainQml).toContain("onStatusChanged: function(status)");
+  expect(mainQml).toContain("onErrorStringChanged: function(errorString)");
+  expect(formattingJs).not.toContain(".pragma library");
+  expect(fullRepresentationQml).not.toContain("Kirigami.Theme.headingFont");
+});

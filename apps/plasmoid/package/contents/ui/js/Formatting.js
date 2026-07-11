@@ -1,5 +1,3 @@
-.pragma library
-
 function fallbackText(state, configuration, connectionState) {
     if (state && state.playbackStatus === "paused" && configuration.pausedBehavior === "track-fallback")
         return trackText(state, configuration) || i18n("Waiting for Cider")
