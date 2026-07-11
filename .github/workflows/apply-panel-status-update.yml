@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/fix-compact-lyrics
+  pull_request:
+    types: [synchronize]
+    branches: [main]
 
 permissions:
   contents: write
