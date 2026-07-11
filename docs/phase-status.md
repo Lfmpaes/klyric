@@ -271,7 +271,7 @@ authenticated `BridgeClient`; it uses `credentials: omit`, never logs the
 publisher token, and recognizes authentication, network, server, and response
 validation failures. `PublishQueue` serializes writes, coalesces bursts to the
 latest pending state, deduplicates display-equivalent updates, sends an ordered
-five-second playing heartbeat, retries transient failures with bounded
+default-five-second playing heartbeat, retries transient failures with bounded
 exponential backoff, and stops retrying authentication failures. Shutdown
 cancels all pending work and attempts a best-effort authenticated clear.
 
@@ -298,12 +298,14 @@ diagnostics. All Phase 4 tasks are complete. Final validation on 2026-07-11:
 Bridge integration tests cannot bind loopback ports inside the restricted
 sandbox, so the full suite was rerun with normal local loopback access and
 passed. The built plugin was copied to Cider's local plugin directory, but
-`bun run --cwd apps/cider-plugin inspect:cider` is `NOT RUN` successfully:
-Cider was not running and `127.0.0.1:9222` refused the remote-debugging
-connection. Manual verification still required: start Cider with remote
+`bun run --cwd apps/cider-plugin inspect:cider` is `NOT RUN`: Cider was not
+running and `127.0.0.1:9222` refused the remote-debugging connection. Manual
+verification still required: start Cider with remote
 debugging, configure the bridge token through the exported plugin settings
 surface, then verify track change, seek, pause/resume, stop, reload, and bridge
 downtime against a live lyrics view. The existing Cider 3.1.8 limitation
 remains: its DOM lyrics require the Lyrics view to remain open.
 
 Phase 4 is complete. Phase 5 is next at task 5.1; it has not been started.
+The Phase 4 implementation commit is `1d79324`
+(`feat(cider-plugin): publish plugin state to bridge`).

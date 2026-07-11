@@ -29,7 +29,7 @@ When documentation and repository state disagree, inspect the implementation and
 - **Recommended model:** GPT-5.6 Terra
 - **Reasoning:** High
 - **Last completed task:** Phase 4 complete — Cider plugin MVP
-- **Last verified commit:** `uncommitted`
+- **Last verified commit:** `1d79324` — feat(cider-plugin): publish plugin state to bridge
 - **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (46 pass), `bun run build`, and `git diff --check` passed on 2026-07-11. The bridge integration tests were rerun with normal local loopback access because restricted-sandbox port binds fail.
 - **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
 - **Next exact action:** Begin Phase 5 at task 5.1 by validating the Plasma 6 package metadata and structure; do not start automatically.
