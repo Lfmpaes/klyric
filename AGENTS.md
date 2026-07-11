@@ -254,6 +254,33 @@ Before Phase 6B, confirm the user is present, can wake the machine, can log back
 
 When a gate is missing, do not rerun passing checks, investigate speculative workarounds, or modify code. Record the blocker once and stop with the exact required user action.
 
+### User intervention protocol
+
+A blocked or user-gated task must never rely on the user inferring what to do.
+
+- Complete every safe, non-disruptive preparation step first.
+- Never suspend, log out, reboot, terminate Plasma, change display configuration, or perform another disruptive desktop action without explicit approval in the current conversation.
+- Request only one user intervention at a time.
+- Immediately before the intervention, output this structure:
+
+  ```text
+  USER ACTION REQUIRED
+
+  Task: <scenario being validated>
+  Why I need you: <why the agent cannot safely or autonomously complete it>
+  Before you act: <confirmation that work is saved and the environment is ready>
+  Please do: <one exact action, including menu path or command when useful>
+  Expected result: <what should happen>
+  Afterward: <exactly what the user should reply or run>
+  ```
+
+- Ask a direct confirmation question before the action, such as: `The environment is prepared. Are you ready to perform the suspend test now?`
+- Do not mark the task complete until post-action evidence is collected.
+- If the action is expected to preserve the Codex session, tell the user exactly what to reply after returning, then continue verification in that session.
+- If the action will terminate the Codex session, update the persistent checkpoint and detailed journal first, ensure all intended work is committed or otherwise safely recorded without stashing or discarding user work, and provide a ready-to-copy resume prompt before asking the user to act.
+- Never tell the user merely that the phase is blocked. State the exact intervention, why it is required, whether it ends the session, and how development resumes afterward.
+- If the user does not confirm readiness, leave the phase blocked and stop without consuming another implementation session.
+
 ---
 
 ## Resume protocol
@@ -398,22 +425,39 @@ When blocked, do not recommend another session until the execution gate is satis
 
 ### Current Phase 6B prompt
 
-Use GPT-5.6 Terra with Medium reasoning after the user confirms the execution gate:
+Use GPT-5.6 Terra with Medium reasoning while the user is present:
 
 ```text
-Continue KLyric Phase 6B from the persistent checkpoint in AGENTS.md. The user
-is present and can wake the machine and log back into Plasma. Verify the worktree
-is safe without resetting, stashing, amending, or discarding anything. Read only
-the Phase 6 sections of docs/phase-status.md and KLYRIC_IMPLEMENTATION_PLAN.md,
-then inspect commits since f00ef43.
+Continue KLyric Phase 6B from the persistent checkpoint in AGENTS.md. Follow the
+User intervention protocol exactly. The user can wake the machine and log back
+into Plasma, but do not initiate any disruptive action without explicit approval
+in the current conversation.
 
-Run the remaining scenarios in order: real suspend/resume with the bridge and
-applet active, then a true Plasma logout/login. Confirm applet 53 reconnects
-after both cycles. Do not modify code unless a scenario fails. On failure, stop
-after collecting reproduction steps, redacted logs, affected components, and
-expected versus observed behavior; recommend GPT-5.6 Sol High for diagnosis.
+Verify the worktree is safe without resetting, stashing, amending, or discarding
+anything. Read only the Phase 6 sections of docs/phase-status.md and
+KLYRIC_IMPLEMENTATION_PLAN.md, then inspect commits since f00ef43. Prepare the
+bridge, applet, logs, and observations needed for the suspend/resume scenario.
 
-If both pass, record the evidence, complete tasks 6.1, 6.6, 6.7 and Phase 6,
-update both status files once, provide the required handoff with the recommended
+When preparation is complete, stop and output a USER ACTION REQUIRED block asking
+the user to perform one suspend/resume cycle. State exactly how to suspend, what
+to expect, and ask the user to reply `resumed` after waking. Do not perform the
+suspend without explicit permission. After the user returns, verify bridge and
+applet reconnection and record the evidence.
+
+Then prepare the Plasma logout/login scenario. Because logout will terminate the
+active Codex and GUI session, update the persistent checkpoint and detailed
+journal before asking the user to log out. Output a USER ACTION REQUIRED block
+that explains the session will end and includes a complete ready-to-copy prompt
+for the post-login Codex session. Do not log out on the user's behalf unless the
+user explicitly commands it.
+
+In the post-login session, verify applet 53 reconnects to the running bridge. If
+a scenario fails, collect reproduction steps, redacted logs, affected components,
+and expected versus observed behavior, then stop and recommend GPT-5.6 Sol High
+for diagnosis. Do not attempt speculative fixes with Terra Medium.
+
+If both scenarios pass, complete tasks 6.1, 6.6, 6.7 and Phase 6, update both
+status files once, provide the required handoff recommending the appropriate
 model for Phase 7, and stop before starting Phase 7.
 ```
+
