@@ -24,16 +24,16 @@ When documentation and repository state disagree, inspect the implementation and
 > **The agent must update this section whenever work starts, a task is completed, a blocker is discovered, validation changes, or a phase ends.**
 
 - **Current phase:** Phase 4 — Cider plugin MVP
-- **Phase status:** `pending`
-- **Current task:** 4.1 — Implement deterministic plugin setup, teardown, and hot-reload cleanup
+- **Phase status:** `in_progress`
+- **Current task:** 4.5 — Implement track-change, seek, pause, resume, stop, and stale-line handling
 - **Recommended model:** GPT-5.6 Terra
 - **Reasoning:** High
-- **Last completed task:** Phase 3 complete — Bridge MVP
-- **Last verified commit:** `9855974` — feat(bridge): add authenticated loopback service
-- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (30 pass), and `bun run build` passed on 2026-07-11.
+- **Last completed task:** 4.4 — Implement the plugin state machine
+- **Last verified commit:** `uncommitted`
+- **Last validation:** `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test` (36 pass), `bun run build`, and `git diff --check` passed on 2026-07-11. The bridge integration tests were rerun with normal local loopback access because restricted-sandbox port binds fail.
 - **Known blockers:** Cider 3.1.8 exposes lyrics only while its Lyrics view is open; closing the view removes the only proven source. No public API, internal store, or complete timed-line source was detected.
-- **Next exact action:** Start Phase 4 at task 4.1 by implementing deterministic plugin setup, teardown, and hot-reload cleanup.
-- **Last updated:** 2026-07-11 — Phase 3 completed with a loopback-only authenticated Bun bridge, memory-only state lifecycle, WebSocket broadcasts, CLI, tests, and all required checks passing. The GitHub remote is reachable and `main` tracks `origin/main`.
+- **Next exact action:** Implement task 4.5 by deriving track change, seek, pause, resume, stop, and stale-line behavior from the existing event-driven observers.
+- **Last updated:** 2026-07-11 — Tasks 4.1–4.4 are implemented and validated: deterministic lifecycle cleanup and reload replacement, guarded playback observation, Phase 1 adapter integration with fallback, and a normalized state machine. Phase 4 remains in progress at 4.5.
 
 Allowed phase statuses:
 
@@ -132,10 +132,10 @@ Allowed phase statuses:
 **Model:** GPT-5.6 Terra — High  
 **Scope:** Production Cider plugin and bridge publication only. Do not implement or style the Plasma widget.
 
-- [ ] **4.1** Implement deterministic plugin setup, teardown, and hot-reload cleanup.
-- [ ] **4.2** Implement normalized playback metadata and playback-state observation.
-- [ ] **4.3** Integrate the selected lyric adapters and fallback strategy from Phase 1.
-- [ ] **4.4** Implement the plugin state machine.
+- [x] **4.1** Implement deterministic plugin setup, teardown, and hot-reload cleanup.
+- [x] **4.2** Implement normalized playback metadata and playback-state observation.
+- [x] **4.3** Integrate the selected lyric adapters and fallback strategy from Phase 1.
+- [x] **4.4** Implement the plugin state machine.
 - [ ] **4.5** Implement track-change, seek, pause, resume, stop, and stale-line handling.
 - [ ] **4.6** Implement the authenticated bridge client.
 - [ ] **4.7** Implement ordered publication, deduplication, heartbeat, retry, and backoff.

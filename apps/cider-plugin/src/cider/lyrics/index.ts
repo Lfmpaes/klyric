@@ -1,3 +1,4 @@
+export * from "./createLyricsSources";
 export * from "./DomLyricsSource";
 export * from "./InternalStoreLyricsSource";
 export * from "./LyricsSource";
