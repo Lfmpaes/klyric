@@ -28,6 +28,27 @@ Item {
     Accessible.name: displayText
     Accessible.description: tooltipText
 
+    onDisplayTextChanged: {
+        if (animationsEnabled && visible)
+            textTransition.restart()
+    }
+
+    SequentialAnimation {
+        id: textTransition
+        NumberAnimation {
+            target: lyricLabel
+            property: "opacity"
+            to: 0.55
+            duration: Kirigami.Units.shortDuration
+        }
+        NumberAnimation {
+            target: lyricLabel
+            property: "opacity"
+            to: 1
+            duration: Kirigami.Units.shortDuration
+        }
+    }
+
     Row {
         id: row
         anchors.fill: parent
@@ -57,10 +78,6 @@ Item {
             font.weight: compact.fontWeight === "bold" ? Font.Bold : compact.fontWeight === "medium" ? Font.Medium : Font.Normal
             Accessible.name: compact.displayText
 
-            Behavior on opacity {
-                enabled: compact.animationsEnabled && !Kirigami.Settings.isMobile
-                NumberAnimation { duration: Kirigami.Units.shortDuration }
-            }
         }
 
         Rectangle {
