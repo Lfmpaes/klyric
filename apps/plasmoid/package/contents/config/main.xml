@@ -3,5 +3,32 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
   <kcfgfile name="" />
-  <group name="General" />
+  <group name="General">
+    <entry name="bridgeHost" type="String"><default>127.0.0.1</default></entry>
+    <entry name="bridgePort" type="Int"><default>37654</default></entry>
+    <entry name="reconnectEnabled" type="Bool"><default>true</default></entry>
+    <entry name="showConnectionStatus" type="Bool"><default>false</default></entry>
+    <entry name="fontSizeAdjustment" type="Int"><default>0</default></entry>
+    <entry name="fontWeight" type="String"><default>normal</default></entry>
+    <entry name="maximumWidth" type="Int"><default>360</default></entry>
+    <entry name="minimumWidth" type="Int"><default>100</default></entry>
+    <entry name="visibleLines" type="Int"><default>1</default></entry>
+    <entry name="alignment" type="String"><default>left</default></entry>
+    <entry name="showMusicIcon" type="Bool"><default>true</default></entry>
+    <entry name="showTrackFallback" type="Bool"><default>true</default></entry>
+    <entry name="hideWhenStopped" type="Bool"><default>false</default></entry>
+    <entry name="hideWhenUnavailable" type="Bool"><default>false</default></entry>
+    <entry name="animationsEnabled" type="Bool"><default>true</default></entry>
+    <entry name="tooltipDetailsEnabled" type="Bool"><default>true</default></entry>
+    <entry name="verticalTextEnabled" type="Bool"><default>false</default></entry>
+    <entry name="showPreviousLine" type="Bool"><default>true</default></entry>
+    <entry name="showNextLine" type="Bool"><default>true</default></entry>
+    <entry name="instrumentalText" type="String"><default>Instrumental</default></entry>
+    <entry name="noLyricsText" type="String"><default>Lyrics unavailable</default></entry>
+    <entry name="pausedBehavior" type="String"><default>keep-line</default></entry>
+    <entry name="clearDelayMs" type="Int"><default>0</default></entry>
+    <entry name="showConnectionBadge" type="Bool"><default>false</default></entry>
+    <entry name="showActiveSource" type="Bool"><default>false</default></entry>
+    <entry name="showLastUpdateAge" type="Bool"><default>false</default></entry>
+  </group>
 </kcfg>
