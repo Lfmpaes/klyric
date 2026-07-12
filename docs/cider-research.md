@@ -70,7 +70,10 @@ content:
 snapshot, watches class/text/child mutations, debounces mutation bursts, uses
 index plus text for line identity, rediscovers a replaced container, and
 disconnects cleanly. It works while Cider is minimized only if the lyric view
-was left open.
+was left open. When active playback begins before Cider has rendered the
+container, the plugin makes a short, bounded source rediscovery attempt; this
+recovers delayed view rendering without polling, retaining lyric text, or
+writing it to diagnostics.
 
 The closed-view limitation is material: Cider 3.1.8 removes the only proven
 lyric source when the view closes. KLyric must surface this compatibility state

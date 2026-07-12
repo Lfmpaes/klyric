@@ -25,20 +25,20 @@ Update this section once after a meaningful implementation or validation batch, 
 
 - **Current phase:** Phase 8 — Release readiness
 - **Phase status:** `in_progress`
-- **Current work mode:** Phase 8 release audit
-- **Current task:** 8.9 — Prepare screenshots, release notes, checksums, and limitations
-- **Current validation focus:** Capture one privacy-safe, product-focused screenshot before tagging
-- **Recommended next model:** GPT-5.6 Terra
+- **Current work mode:** Phase 8 Cider compatibility regression investigation
+- **Current task:** Diagnose failed live delayed-DOM lyric rediscovery
+- **Current validation focus:** Determine why a reloaded plugin remains unavailable despite user-reported open synchronized Lyrics view, without reading or logging lyric text
+- **Recommended next model:** GPT-5.6 Sol
 - **Reasoning:** High
-- **Escalation:** GPT-5.6 Sol — High only for a compatibility, architecture, privacy, security, or unexplained final-acceptance defect
-- **Last completed task:** Phase 7 — Packaging and installation
+- **Escalation:** Active — unexplained final compatibility failure after the bounded retry implementation and focused checks passed
+- **Last completed task:** Focused Cider delayed lyric-discovery retry implementation and automated validation
 - **Last verified implementation commit:** `3a26249` — remove automatic installer lifecycle
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
-- **Last validation:** A clean detached worktree at `3a26249` passed `bun install --frozen-lockfile`, `format`, `lint`, `typecheck`, 69 tests, `build`, `package`, both checksum manifests, and `git diff --check`. The archive test extracted the tarball and installed it with disposable XDG paths.
-- **Known blockers:** Cider 3.1.8 requires its Lyrics view open for live DOM lyrics; this remains a documented compatibility limitation.
-- **Execution gate:** Await one privacy-safe screenshot selected by the user; do not capture the live desktop without explicit approval.
-- **Next exact action:** Save a cropped KLyric-only screenshot at `docs/screenshots/klyric-v0.1.0.png`.
-- **Last updated:** 2026-07-12 — release audit complete through task 8.8 at `3a26249`; screenshot and tag remain.
+- **Last validation:** The updated local plugin was reloaded and a manually started bridge reported `publisherSeen: true`, `stateAvailable: true`, and one client, but its redacted state stayed `sourceKind: none`, `lyricsKind: unavailable`, `hasLyrics: false`, `currentLinePresent: false`, `playbackStatus: playing`, and `stale: true`. DevTools inspection is unavailable because `127.0.0.1:9222` refused the connection.
+- **Known blockers:** Cider 3.1.8 requires its Lyrics view open for live DOM lyrics. The reported open view did not recover under the new retry window; DevTools is not enabled for diagnosis.
+- **Execution gate:** Do not resume screenshot/tag work. Start Cider with remote debugging and diagnose the redacted DOM/source lifecycle with GPT-5.6 Sol High.
+- **Next exact action:** Obtain a safe DevTools-enabled Cider session, then inspect structural capability data and plugin lifecycle timing without returning lyric text.
+- **Last updated:** 2026-07-12 — live retry validation failed with bridge state still unavailable; Sol escalation required.
 
 Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 

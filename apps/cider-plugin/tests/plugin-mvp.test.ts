@@ -32,6 +32,74 @@ class FakePlayback implements PlaybackObserver {
   }
 }
 
+class ControllablePlayback implements PlaybackObserver {
+  private context: PlaybackSourceContext | undefined;
+
+  public start(context: PlaybackSourceContext): void {
+    this.context = context;
+  }
+
+  public stop(): void {
+    this.context = undefined;
+  }
+
+  public emit(
+    status: "playing" | "paused" | "stopped",
+    trackId: string | null,
+  ): void {
+    this.context?.onSnapshot({
+      status,
+      track: trackId === null ? null : { id: trackId },
+    });
+  }
+}
+
+class FakeRetryClock {
+  public readonly timers = new Map<number, () => void>();
+  private nextId = 0;
+
+  public setTimeout(callback: () => void): number {
+    const id = this.nextId++;
+    this.timers.set(id, callback);
+    return id;
+  }
+
+  public clearTimeout(timer: number): void {
+    this.timers.delete(timer);
+  }
+
+  public fireNext(): void {
+    const next = this.timers.entries().next().value;
+    if (next === undefined) throw new Error("No retry timer is pending");
+    const [id, callback] = next;
+    this.timers.delete(id);
+    callback();
+  }
+}
+
+class DelayedLyricsSource implements LyricsSource {
+  public readonly kind = "dom" as const;
+  public readonly confidence = 60;
+  public available = false;
+  public starts = 0;
+
+  public async canStart(): Promise<boolean> {
+    return this.available;
+  }
+
+  public async start(context: LyricsSourceContext): Promise<void> {
+    this.starts++;
+    context.onSnapshot({
+      source: this.kind,
+      lines: [{ text: "Sanitized line", index: 0 }],
+      currentLine: { text: "Sanitized line", index: 0 },
+      currentIndex: 0,
+    });
+  }
+
+  public async stop(): Promise<void> {}
+}
+
 class FakeLyricsSource implements LyricsSource {
   public readonly kind = "dom" as const;
   public readonly confidence = 60;
@@ -143,6 +211,70 @@ describe("plugin lifecycle", () => {
     expect(plugin.isStarted()).toBe(true);
     expect(playback.starts).toBe(1);
     await plugin.teardown();
+  });
+
+  test("retries unavailable sources while an active track is playing", async () => {
+    const playback = new ControllablePlayback();
+    const lyrics = new DelayedLyricsSource();
+    const clock = new FakeRetryClock();
+    const states: RawState[] = [];
+    const plugin = new KLyricPlugin({
+      document: {} as Document,
+      playback,
+      createLyricsSources: () => [lyrics],
+      lyricsRetryClock: clock,
+      lyricsRetryDelaysMs: [1, 2],
+      stateMachine: new PluginStateMachine({
+        onState: (_, state) => states.push(state),
+      }),
+    });
+
+    await plugin.setup();
+    playback.emit("playing", "track-a");
+    expect(clock.timers.size).toBe(1);
+    lyrics.available = true;
+    clock.fireNext();
+    await settled();
+
+    expect(lyrics.starts).toBe(1);
+    expect(states.at(-1)).toMatchObject({
+      sourceKind: "dom",
+      lyricsKind: "line-synced",
+      hasLyrics: true,
+    });
+    expect(clock.timers.size).toBe(0);
+    await plugin.teardown();
+  });
+
+  test("bounds retries and cancels them when playback stops or teardown begins", async () => {
+    const playback = new ControllablePlayback();
+    const lyrics = new DelayedLyricsSource();
+    const clock = new FakeRetryClock();
+    const plugin = new KLyricPlugin({
+      document: {} as Document,
+      playback,
+      createLyricsSources: () => [lyrics],
+      lyricsRetryClock: clock,
+      lyricsRetryDelaysMs: [1, 2],
+    });
+
+    await plugin.setup();
+    playback.emit("playing", "track-a");
+    clock.fireNext();
+    await settled();
+    expect(clock.timers.size).toBe(1);
+    clock.fireNext();
+    await settled();
+    expect(clock.timers.size).toBe(0);
+
+    playback.emit("playing", "track-b");
+    expect(clock.timers.size).toBe(1);
+    playback.emit("paused", "track-b");
+    expect(clock.timers.size).toBe(0);
+    playback.emit("playing", "track-b");
+    expect(clock.timers.size).toBe(1);
+    await plugin.teardown();
+    expect(clock.timers.size).toBe(0);
   });
 });
 
@@ -418,6 +550,5 @@ function snapshot(): RawLyricsSnapshot {
 }
 
 async function settled(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
+  for (let index = 0; index < 5; index++) await Promise.resolve();
 }

@@ -22,6 +22,14 @@ import {
   type PluginStateMachineOptions,
 } from "./PluginStateMachine";
 
+export interface LyricsRetryClock {
+  setTimeout(
+    callback: () => void,
+    delayMs: number,
+  ): ReturnType<typeof setTimeout>;
+  clearTimeout(timer: ReturnType<typeof setTimeout>): void;
+}
+
 export interface KLyricPluginDependencies {
   root?: unknown;
   document?: Document;
@@ -39,6 +47,8 @@ export interface KLyricPluginDependencies {
   createPublisher?: (settings: PluginSettings) => StatePublisher;
   diagnostics?: Diagnostics;
   onError?: (error: Error) => void;
+  lyricsRetryClock?: LyricsRetryClock;
+  lyricsRetryDelaysMs?: readonly number[];
 }
 
 /** Coordinates host observers and guarantees teardown is safe to repeat. */
@@ -51,6 +61,9 @@ export class KLyricPlugin {
   private stateMachine: PluginStateMachine | undefined;
   private previousTrackIdentity: string | undefined;
   private ignoreUnidentifiedLyrics = false;
+  private lyricsRetryTimer: ReturnType<typeof setTimeout> | undefined;
+  private lyricsRetryAttempt = 0;
+  private lyricsRetryGeneration = 0;
   private started = false;
 
   public constructor(dependencies: KLyricPluginDependencies = {}) {
@@ -106,6 +119,7 @@ export class KLyricPlugin {
       machine.subscribe((phase, state) => {
         this.dependencies.diagnostics?.setState(phase, state.sourceKind);
         if (settings.enabled) queue.enqueue(state);
+        this.scheduleLyricsRetry(phase, state);
       }),
     );
 
@@ -136,19 +150,24 @@ export class KLyricPlugin {
         const trackChanged =
           this.previousTrackIdentity !== undefined &&
           nextIdentity !== this.previousTrackIdentity;
+        if (trackChanged) {
+          this.lyricsRetryGeneration++;
+          this.cancelLyricsRetry(true);
+        }
         this.previousTrackIdentity = nextIdentity;
         machine.setPlayback(snapshot);
         if (trackChanged) void this.restartLyrics();
       },
       onError: (error) => this.report(error),
     });
-    await this.startLyrics(factory, abortController.signal);
     this.lyricsFactory = factory;
     this.lyricsSignal = abortController.signal;
+    await this.startLyrics(factory, abortController.signal);
   }
 
   public async teardown(): Promise<void> {
     this.started = false;
+    this.cancelLyricsRetry(true);
     const cleanup = this.cleanup;
     this.cleanup = undefined;
     this.activeLyrics = undefined;
@@ -218,6 +237,73 @@ export class KLyricPlugin {
     )
       return;
     await this.startLyrics(factory, signal, this.activeLyrics);
+  }
+
+  private scheduleLyricsRetry(
+    phase: string,
+    state: {
+      playbackStatus: string;
+      track: unknown;
+      hasLyrics: boolean;
+      lyricsKind: string;
+    },
+  ): void {
+    if (
+      !this.started ||
+      phase === "source-error" ||
+      state.playbackStatus !== "playing" ||
+      state.track === null ||
+      state.hasLyrics ||
+      state.lyricsKind !== "unavailable"
+    ) {
+      this.cancelLyricsRetry(
+        state.hasLyrics ||
+          state.playbackStatus !== "playing" ||
+          state.track === null,
+      );
+      return;
+    }
+    if (this.lyricsRetryTimer !== undefined) return;
+    const delayMs = this.lyricsRetryDelaysMs()[this.lyricsRetryAttempt];
+    if (delayMs === undefined) return;
+    const generation = this.lyricsRetryGeneration;
+    const factory = this.lyricsFactory;
+    const signal = this.lyricsSignal;
+    if (factory === undefined || signal === undefined) return;
+    this.lyricsRetryAttempt++;
+    this.lyricsRetryTimer = this.lyricsRetryClock().setTimeout(() => {
+      this.lyricsRetryTimer = undefined;
+      if (
+        !this.started ||
+        signal.aborted ||
+        generation !== this.lyricsRetryGeneration ||
+        factory !== this.lyricsFactory ||
+        signal !== this.lyricsSignal
+      )
+        return;
+      void this.startLyrics(factory, signal);
+    }, delayMs);
+  }
+
+  private cancelLyricsRetry(resetAttempts: boolean): void {
+    if (this.lyricsRetryTimer !== undefined) {
+      this.lyricsRetryClock().clearTimeout(this.lyricsRetryTimer);
+      this.lyricsRetryTimer = undefined;
+    }
+    if (resetAttempts) this.lyricsRetryAttempt = 0;
+  }
+
+  private lyricsRetryClock(): LyricsRetryClock {
+    return (
+      this.dependencies.lyricsRetryClock ?? {
+        setTimeout,
+        clearTimeout,
+      }
+    );
+  }
+
+  private lyricsRetryDelaysMs(): readonly number[] {
+    return this.dependencies.lyricsRetryDelaysMs ?? [500, 1_000, 2_000];
   }
 
   private report(error: Error): void {

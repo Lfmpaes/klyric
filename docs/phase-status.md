@@ -763,3 +763,36 @@ The detached clean worktree at commit `3a26249` passed `bun install
 SHA-256 manifests, and `git diff --check`. Task 8.9 is partially complete:
 release notes, checksums, and limitations are prepared; one product-focused,
 privacy-safe screenshot remains before the final `v0.1.0` tag.
+
+### Cider delayed lyric discovery regression — 2026-07-12
+
+A live report against Cider 3.1.8-1 found an open synchronized Lyrics view with
+`.lyric-view-content`, 43 `.lyric-line` elements, and one `.lyric-line.active`,
+while a reloaded plugin remained at `sourceKind: none`, `lyricsKind:
+unavailable`, and `hasLyrics: false`. The plugin had previously selected the
+DOM source only during setup or track changes, so it could miss a Lyrics DOM
+rendered later in active playback.
+
+KLyric now owns a short, bounded rediscovery schedule for an active playing
+track whose normalized state remains unavailable. It uses the existing
+serialized `LyricsSourceFactory`, makes no source-error/failure policy changes,
+and cancels timers on lyric availability, non-playing/trackless state, track
+change, teardown, and retry exhaustion. Timer callbacks are guarded against old
+plugin and track generations. Regression tests cover delayed source appearance,
+bounded retries, and cancellation during playback changes and teardown. The
+focused plugin test (12 pass), `lint`, `typecheck`, `build`, and `git diff
+--check` passed. Live Cider plugin reload validation remains required; inspect
+only bridge state flags and do not record lyric text. Screenshot and tagging
+work remains paused until this validation completes.
+
+Live validation later reloaded the updated installed plugin and started a
+manual bridge. The bridge health endpoint reported `publisherSeen: true`,
+`stateAvailable: true`, and one client, but its redacted state remained
+`sourceKind: none`, `lyricsKind: unavailable`, `hasLyrics: false`, no current
+line, `playbackStatus: playing`, and `stale: true`. This does not match the
+reported open synchronized Lyrics DOM and means the bounded retry did not
+resolve the live compatibility failure. The safe capability inspector could not
+connect because Cider was not running with remote debugging on port 9222. Do
+not continue release screenshot or tag work. Obtain a DevTools-enabled Cider
+session and escalate to GPT-5.6 Sol High to diagnose the structural DOM and
+plugin lifecycle mismatch without collecting lyric text.
