@@ -1,4 +1,5 @@
 export * from "./createLyricsSources";
+export * from "./DomLyricsDiscovery";
 export * from "./DomLyricsSource";
 export * from "./InternalStoreLyricsSource";
 export * from "./LyricsSource";

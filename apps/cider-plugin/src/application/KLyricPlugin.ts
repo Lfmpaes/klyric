@@ -1,5 +1,7 @@
 import {
   createLyricsSources,
+  DomLyricsDiscovery,
+  type LyricsDiscovery,
   type LyricsSource,
   type LyricsSourceContext,
   LyricsSourceFactory,
@@ -40,6 +42,10 @@ export interface KLyricPluginDependencies {
     documentRoot: Document,
     preference?: PluginSettings["sourcePreference"],
   ) => readonly LyricsSource[];
+  createLyricsDiscovery?: (
+    documentRoot: Document,
+    onAvailable: () => void,
+  ) => LyricsDiscovery;
   stateMachine?: PluginStateMachine;
   stateMachineOptions?: PluginStateMachineOptions;
   settingsStore?: PluginSettingsStore;
@@ -60,10 +66,12 @@ export class KLyricPlugin {
   private lyricsSignal: AbortSignal | undefined;
   private stateMachine: PluginStateMachine | undefined;
   private previousTrackIdentity: string | undefined;
-  private ignoreUnidentifiedLyrics = false;
+  private lyricsSourceGeneration = 0;
   private lyricsRetryTimer: ReturnType<typeof setTimeout> | undefined;
   private lyricsRetryAttempt = 0;
   private lyricsRetryGeneration = 0;
+  private lyricsDiscovery: LyricsDiscovery | undefined;
+  private lyricsDiscoveryPending = false;
   private started = false;
 
   public constructor(dependencies: KLyricPluginDependencies = {}) {
@@ -111,7 +119,10 @@ export class KLyricPlugin {
 
     this.cleanup = cleanup;
     this.stateMachine = machine;
+    this.lyricsFactory = factory;
+    this.lyricsSignal = abortController.signal;
     cleanup.add(() => abortController.abort());
+    cleanup.add(() => this.stopLyricsDiscovery());
     cleanup.add(() => factory.stop());
     cleanup.add(() => playback.stop());
     cleanup.add(() => queue.stop(true));
@@ -120,6 +131,7 @@ export class KLyricPlugin {
         this.dependencies.diagnostics?.setState(phase, state.sourceKind);
         if (settings.enabled) queue.enqueue(state);
         this.scheduleLyricsRetry(phase, state);
+        this.reconcileLyricsDiscovery(phase, state, documentRoot);
       }),
     );
 
@@ -153,6 +165,7 @@ export class KLyricPlugin {
         if (trackChanged) {
           this.lyricsRetryGeneration++;
           this.cancelLyricsRetry(true);
+          this.stopLyricsDiscovery();
         }
         this.previousTrackIdentity = nextIdentity;
         machine.setPlayback(snapshot);
@@ -160,14 +173,13 @@ export class KLyricPlugin {
       },
       onError: (error) => this.report(error),
     });
-    this.lyricsFactory = factory;
-    this.lyricsSignal = abortController.signal;
     await this.startLyrics(factory, abortController.signal);
   }
 
   public async teardown(): Promise<void> {
     this.started = false;
     this.cancelLyricsRetry(true);
+    this.stopLyricsDiscovery();
     const cleanup = this.cleanup;
     this.cleanup = undefined;
     this.activeLyrics = undefined;
@@ -175,7 +187,7 @@ export class KLyricPlugin {
     this.lyricsSignal = undefined;
     this.stateMachine = undefined;
     this.previousTrackIdentity = undefined;
-    this.ignoreUnidentifiedLyrics = false;
+    this.lyricsSourceGeneration++;
     if (cleanup === undefined) return;
     try {
       await cleanup.dispose();
@@ -195,18 +207,22 @@ export class KLyricPlugin {
     signal: AbortSignal,
     failed?: LyricsSource,
   ): Promise<void> {
+    const generation = ++this.lyricsSourceGeneration;
     let observedError = false;
+    const ownsCallbacks = () =>
+      this.started &&
+      !signal.aborted &&
+      generation === this.lyricsSourceGeneration &&
+      factory === this.lyricsFactory &&
+      signal === this.lyricsSignal;
     const context: LyricsSourceContext = {
       signal,
       onSnapshot: (snapshot) => {
-        if (this.ignoreUnidentifiedLyrics && snapshot.trackId === undefined) {
-          this.ignoreUnidentifiedLyrics = false;
-          return;
-        }
-        this.ignoreUnidentifiedLyrics = false;
+        if (!ownsCallbacks()) return;
         this.stateMachine?.setLyrics(snapshot);
       },
       onError: (error) => {
+        if (!ownsCallbacks()) return;
         observedError = true;
         this.stateMachine?.sourceFailed();
         void this.recoverLyrics(factory, signal, error.source);
@@ -216,9 +232,10 @@ export class KLyricPlugin {
       failed === undefined
         ? await factory.startBest(context)
         : await factory.startFallback(context, failed);
-    if (!this.started || signal.aborted) return;
+    if (!ownsCallbacks()) return;
     this.activeLyrics = source ?? undefined;
     if (source !== null) {
+      this.stopLyricsDiscovery();
       this.stateMachine?.setSourceKind(source.kind);
     } else if (failed === undefined && !observedError) {
       this.stateMachine?.setSourceKind("none");
@@ -237,6 +254,67 @@ export class KLyricPlugin {
     )
       return;
     await this.startLyrics(factory, signal, this.activeLyrics);
+  }
+
+  private reconcileLyricsDiscovery(
+    phase: string,
+    state: {
+      playbackStatus: string;
+      track: unknown;
+      hasLyrics: boolean;
+      lyricsKind: string;
+    },
+    documentRoot: Document,
+  ): void {
+    if (
+      !this.started ||
+      phase === "source-error" ||
+      state.playbackStatus !== "playing" ||
+      state.track === null ||
+      state.hasLyrics ||
+      state.lyricsKind !== "unavailable"
+    ) {
+      this.stopLyricsDiscovery();
+      return;
+    }
+    if (this.lyricsDiscovery !== undefined || this.lyricsDiscoveryPending)
+      return;
+    const factory = this.lyricsFactory;
+    const signal = this.lyricsSignal;
+    if (factory === undefined || signal === undefined) return;
+    const generation = this.lyricsRetryGeneration;
+    let triggered = false;
+    const discovery = (
+      this.dependencies.createLyricsDiscovery ??
+      ((root, onAvailable) => new DomLyricsDiscovery(root, onAvailable))
+    )(documentRoot, () => {
+      if (triggered) return;
+      triggered = true;
+      this.lyricsDiscoveryPending = true;
+      discovery.stop();
+      if (this.lyricsDiscovery === discovery) this.lyricsDiscovery = undefined;
+      if (
+        !this.started ||
+        signal.aborted ||
+        generation !== this.lyricsRetryGeneration ||
+        factory !== this.lyricsFactory ||
+        signal !== this.lyricsSignal
+      ) {
+        this.lyricsDiscoveryPending = false;
+        return;
+      }
+      void this.startLyrics(factory, signal).finally(() => {
+        this.lyricsDiscoveryPending = false;
+      });
+    });
+    this.lyricsDiscovery = discovery;
+    discovery.start();
+  }
+
+  private stopLyricsDiscovery(): void {
+    this.lyricsDiscovery?.stop();
+    this.lyricsDiscovery = undefined;
+    this.lyricsDiscoveryPending = false;
   }
 
   private scheduleLyricsRetry(
@@ -332,7 +410,6 @@ export class KLyricPlugin {
     const factory = this.lyricsFactory;
     const signal = this.lyricsSignal;
     if (!this.started || factory === undefined || signal === undefined) return;
-    this.ignoreUnidentifiedLyrics = true;
     factory.resetFailures();
     await this.startLyrics(factory, signal);
   }

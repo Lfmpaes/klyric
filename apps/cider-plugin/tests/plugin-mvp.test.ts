@@ -6,10 +6,12 @@ import {
   type PluginPhase,
   PluginStateMachine,
 } from "../src/application/PluginStateMachine";
-import type {
-  LyricsSource,
-  LyricsSourceContext,
-  RawLyricsSnapshot,
+import {
+  LyricsSourceError,
+  type LyricsDiscovery,
+  type LyricsSource,
+  type LyricsSourceContext,
+  type RawLyricsSnapshot,
 } from "../src/cider/lyrics";
 import type {
   PlaybackObserver,
@@ -77,6 +79,58 @@ class FakeRetryClock {
   }
 }
 
+class FakeDiscovery implements LyricsDiscovery {
+  public starts = 0;
+  public stops = 0;
+  private available: (() => void) | undefined;
+
+  public constructor(onAvailable: () => void) {
+    this.available = onAvailable;
+  }
+
+  public start(): void {
+    this.starts++;
+  }
+
+  public stop(): void {
+    this.stops++;
+  }
+
+  public trigger(): void {
+    this.available?.();
+  }
+}
+
+class FakeDeferredDiscovery implements LyricsDiscovery {
+  public starts = 0;
+  public stops = 0;
+  private available: (() => void) | undefined;
+  private pending = false;
+
+  public constructor(onAvailable: () => void) {
+    this.available = onAvailable;
+  }
+
+  public start(): void {
+    this.starts++;
+  }
+
+  public stop(): void {
+    this.stops++;
+    this.pending = false;
+  }
+
+  public trigger(): void {
+    this.pending = true;
+  }
+
+  public drain(): void {
+    if (!this.pending) return;
+    this.pending = false;
+    this.available?.();
+  }
+}
+
 class DelayedLyricsSource implements LyricsSource {
   public readonly kind = "dom" as const;
   public readonly confidence = 60;
@@ -122,6 +176,53 @@ class FakeLyricsSource implements LyricsSource {
 
   public async stop(): Promise<void> {
     this.stops++;
+  }
+}
+
+class SynchronousDomLyricsSource implements LyricsSource {
+  public readonly kind = "dom" as const;
+  public readonly confidence = 60;
+  public readonly contexts: LyricsSourceContext[] = [];
+  public starts = 0;
+  public stops = 0;
+
+  public async canStart(): Promise<boolean> {
+    return true;
+  }
+
+  public async start(context: LyricsSourceContext): Promise<void> {
+    this.starts++;
+    this.contexts.push(context);
+    context.onSnapshot(this.snapshot(this.starts));
+  }
+
+  public async stop(): Promise<void> {
+    this.stops++;
+  }
+
+  public emitSnapshot(contextIndex: number, line: string): void {
+    this.contexts[contextIndex]?.onSnapshot({
+      source: this.kind,
+      lines: [{ text: line, index: 0 }],
+      currentLine: { text: line, index: 0 },
+      currentIndex: 0,
+    });
+  }
+
+  public emitError(contextIndex: number): void {
+    this.contexts[contextIndex]?.onError(
+      new LyricsSourceError(this.kind, "Synthetic superseded source error"),
+    );
+  }
+
+  private snapshot(start: number): RawLyricsSnapshot {
+    const line = `Sanitized line ${start}`;
+    return {
+      source: this.kind,
+      lines: [{ text: line, index: 0 }],
+      currentLine: { text: line, index: 0 },
+      currentIndex: 0,
+    };
   }
 }
 
@@ -213,6 +314,63 @@ describe("plugin lifecycle", () => {
     await plugin.teardown();
   });
 
+  test("accepts synchronous DOM snapshots from a replacement source and rejects superseded callbacks", async () => {
+    const playback = new ControllablePlayback();
+    const lyrics = new SynchronousDomLyricsSource();
+    const clock = new FakeRetryClock();
+    const states: RawState[] = [];
+    const plugin = new KLyricPlugin({
+      document: {} as Document,
+      playback,
+      createLyricsSources: () => [lyrics],
+      createLyricsDiscovery: (_, onAvailable) => new FakeDiscovery(onAvailable),
+      lyricsRetryClock: clock,
+      lyricsRetryDelaysMs: [1],
+      stateMachine: new PluginStateMachine({
+        onState: (_, state) => states.push(state),
+      }),
+    });
+
+    await plugin.setup();
+    playback.emit("playing", "track-a");
+    lyrics.emitSnapshot(0, "Sanitized line 1");
+    expect(states.at(-1)).toMatchObject({
+      sourceKind: "dom",
+      lyricsKind: "line-synced",
+      hasLyrics: true,
+      stale: false,
+      currentLine: { text: "Sanitized line 1", index: 0 },
+    });
+
+    playback.emit("playing", "track-b");
+    await settled();
+    expect(lyrics.starts).toBe(2);
+    expect(clock.timers.size).toBe(0);
+    expect(states.at(-1)).toMatchObject({
+      track: { id: "track-b" },
+      sourceKind: "dom",
+      lyricsKind: "line-synced",
+      hasLyrics: true,
+      stale: false,
+      currentLine: { text: "Sanitized line 2", index: 0 },
+    });
+
+    await settled();
+    const stateCount = states.length;
+    lyrics.emitSnapshot(0, "Superseded line");
+    lyrics.emitError(0);
+    await settled();
+    expect(states).toHaveLength(stateCount);
+    expect(lyrics.starts).toBe(2);
+
+    await plugin.teardown();
+    lyrics.emitSnapshot(1, "Post-teardown line");
+    lyrics.emitError(1);
+    await settled();
+    expect(states).toHaveLength(stateCount);
+    expect(lyrics.starts).toBe(2);
+  });
+
   test("retries unavailable sources while an active track is playing", async () => {
     const playback = new ControllablePlayback();
     const lyrics = new DelayedLyricsSource();
@@ -222,6 +380,7 @@ describe("plugin lifecycle", () => {
       document: {} as Document,
       playback,
       createLyricsSources: () => [lyrics],
+      createLyricsDiscovery: (_, onAvailable) => new FakeDiscovery(onAvailable),
       lyricsRetryClock: clock,
       lyricsRetryDelaysMs: [1, 2],
       stateMachine: new PluginStateMachine({
@@ -246,6 +405,98 @@ describe("plugin lifecycle", () => {
     await plugin.teardown();
   });
 
+  test("activates discovery after retry exhaustion and cleans it up on lifecycle changes", async () => {
+    const playback = new ControllablePlayback();
+    const lyrics = new DelayedLyricsSource();
+    const clock = new FakeRetryClock();
+    const discoveries: FakeDiscovery[] = [];
+    const plugin = new KLyricPlugin({
+      document: {} as Document,
+      playback,
+      createLyricsSources: () => [lyrics],
+      createLyricsDiscovery: (_, onAvailable) => {
+        const discovery = new FakeDiscovery(onAvailable);
+        discoveries.push(discovery);
+        return discovery;
+      },
+      lyricsRetryClock: clock,
+      lyricsRetryDelaysMs: [1, 2],
+    });
+
+    await plugin.setup();
+    playback.emit("playing", "track-a");
+    clock.fireNext();
+    await settled();
+    clock.fireNext();
+    await settled();
+    expect(clock.timers.size).toBe(0);
+    expect(discoveries).toHaveLength(1);
+
+    lyrics.available = true;
+    discoveries[0]?.trigger();
+    discoveries[0]?.trigger();
+    await settled();
+    expect(lyrics.starts).toBe(1);
+    expect(discoveries[0]?.stops).toBe(1);
+
+    lyrics.available = false;
+    playback.emit("playing", "track-b");
+    expect(discoveries).toHaveLength(2);
+    playback.emit("stopped", null);
+    expect(discoveries[1]?.stops).toBe(1);
+    discoveries[1]?.trigger();
+    await settled();
+    expect(lyrics.starts).toBe(1);
+
+    await plugin.teardown();
+  });
+
+  test("defers exhausted-retry discovery and cancels it on lifecycle changes", async () => {
+    const playback = new ControllablePlayback();
+    const lyrics = new DelayedLyricsSource();
+    const clock = new FakeRetryClock();
+    const discoveries: FakeDeferredDiscovery[] = [];
+    const plugin = new KLyricPlugin({
+      document: {} as Document,
+      playback,
+      createLyricsSources: () => [lyrics],
+      createLyricsDiscovery: (_, onAvailable) => {
+        const discovery = new FakeDeferredDiscovery(onAvailable);
+        discoveries.push(discovery);
+        return discovery;
+      },
+      lyricsRetryClock: clock,
+      lyricsRetryDelaysMs: [1, 2],
+    });
+
+    await plugin.setup();
+    playback.emit("playing", "track-a");
+    clock.fireNext();
+    await settled();
+    clock.fireNext();
+    await settled();
+    expect(discoveries).toHaveLength(1);
+
+    lyrics.available = true;
+    discoveries[0]?.trigger();
+    discoveries[0]?.trigger();
+    expect(lyrics.starts).toBe(0);
+    discoveries[0]?.drain();
+    await settled();
+    expect(lyrics.starts).toBe(1);
+
+    lyrics.available = false;
+    playback.emit("playing", "track-b");
+    expect(discoveries).toHaveLength(2);
+    discoveries[1]?.trigger();
+    playback.emit("stopped", null);
+    discoveries[1]?.drain();
+    await settled();
+    expect(lyrics.starts).toBe(1);
+
+    await plugin.teardown();
+  });
+
   test("bounds retries and cancels them when playback stops or teardown begins", async () => {
     const playback = new ControllablePlayback();
     const lyrics = new DelayedLyricsSource();
@@ -254,6 +505,7 @@ describe("plugin lifecycle", () => {
       document: {} as Document,
       playback,
       createLyricsSources: () => [lyrics],
+      createLyricsDiscovery: (_, onAvailable) => new FakeDiscovery(onAvailable),
       lyricsRetryClock: clock,
       lyricsRetryDelaysMs: [1, 2],
     });

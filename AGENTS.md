@@ -25,20 +25,20 @@ Update this section once after a meaningful implementation or validation batch, 
 
 - **Current phase:** Phase 8 — Release readiness
 - **Phase status:** `in_progress`
-- **Current work mode:** Phase 8 Cider compatibility regression investigation
-- **Current task:** Diagnose failed live delayed-DOM lyric rediscovery
-- **Current validation focus:** Determine why a reloaded plugin remains unavailable despite user-reported open synchronized Lyrics view, without reading or logging lyric text
-- **Recommended next model:** GPT-5.6 Sol
-- **Reasoning:** High
-- **Escalation:** Active — unexplained final compatibility failure after the bounded retry implementation and focused checks passed
-- **Last completed task:** Focused Cider delayed lyric-discovery retry implementation and automated validation
-- **Last verified implementation commit:** `3a26249` — remove automatic installer lifecycle
+- **Current work mode:** Phase 8 release blocked pending privacy-safe live track-change acceptance
+- **Current task:** Run the privacy-safe live DOM-to-widget track-change scenario with the installed source-generation fix
+- **Current validation focus:** Confirm the restarted DOM source's initial snapshot reaches the plugin, bridge, protocol-valid widget state, and rendered current line
+- **Recommended next model:** GPT-5.6 Terra
+- **Reasoning:** Medium
+- **Escalation:** GPT-5.6 Sol High only if the source-generation regression passes but live acceptance loses lyric state at an unexplained boundary
+- **Last completed task:** Implemented and regression-tested source-generation ownership for lyric callbacks
+- **Last verified implementation commit:** `275a341` — retry delayed lyric discovery (all Phase 8 discovery and ownership changes remain uncommitted)
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
-- **Last validation:** The updated local plugin was reloaded and a manually started bridge reported `publisherSeen: true`, `stateAvailable: true`, and one client, but its redacted state stayed `sourceKind: none`, `lyricsKind: unavailable`, `hasLyrics: false`, `currentLinePresent: false`, `playbackStatus: playing`, and `stale: true`. DevTools inspection is unavailable because `127.0.0.1:9222` refused the connection.
-- **Known blockers:** Cider 3.1.8 requires its Lyrics view open for live DOM lyrics. The reported open view did not recover under the new retry window; DevTools is not enabled for diagnosis.
-- **Execution gate:** Do not resume screenshot/tag work. Start Cider with remote debugging and diagnose the redacted DOM/source lifecycle with GPT-5.6 Sol High.
-- **Next exact action:** Obtain a safe DevTools-enabled Cider session, then inspect structural capability data and plugin lifecycle timing without returning lyric text.
-- **Last updated:** 2026-07-12 — live retry validation failed with bridge state still unavailable; Sol escalation required.
+- **Last validation:** Focused plugin and lyrics tests passed (28 pass, 0 fail). Changed-file Biome format/lint with `--config-path biome.json`, full `typecheck`, `build`, and `git diff --check` passed. Root `bun run format`/`bun run lint` remain unavailable because pre-existing nested `.claude/worktrees/*/biome.json` root configurations conflict with the repository configuration. The local plugin installation succeeded after stopping the active user bridge service to avoid `ETXTBSY`, and the service is active. Cider and DevTools port 9222 were unavailable, so the required live track-change scenario was NOT RUN. Bridge health safely reported `publisherSeen: false`, `stateAvailable: false`, and one widget client; no lyric text, metadata, account data, or tokens were collected.
+- **Known blockers:** RELEASE BLOCKER — automated source-generation ownership now accepts the restarted DOM source's untagged synchronous initial snapshot and rejects superseded/teardown callbacks, but privacy-safe end-to-end track-change acceptance has not run because Cider and DevTools were unavailable. The broad DOM selector's filtered-index inconsistency remains confirmed but out of scope; do not commit release collateral or create `v0.1.0`.
+- **Execution gate:** Do not tag or release until a privacy-safe live track-change scenario proves source snapshot emission/acceptance, bridge state availability, protocol-valid widget state, and rendered current-line presence.
+- **Next exact action:** Start Cider with DevTools available, ensure the installed KLyric plugin and bridge are active, perform one synchronized track change with Lyrics open, and collect only the approved redacted structural/protocol flags.
+- **Last updated:** 2026-07-12 — source-generation ownership fix and focused regression validation completed; live acceptance is still required.
 
 Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 
@@ -233,7 +233,7 @@ Rules:
 - [x] **8.6** Complete architecture, privacy, security, and dependency reviews.
 - [x] **8.7** Run CI and acceptance tests from a clean checkout.
 - [x] **8.8** Test final artifacts on a clean target.
-- [ ] **8.9** Prepare screenshots, release notes, checksums, and limitations.
+- [ ] **8.9** Prepare screenshots, release notes, checksums, and limitations. **BLOCKED — release-blocking lyric display failure requires correction and renewed acceptance evidence before collateral can be finalized.**
 - [ ] **8.10** Tag and prepare `v0.1.0` after all criteria pass.
 - [ ] **Phase 8 complete** — Do not begin future-work features.
 
@@ -253,6 +253,16 @@ Rules:
 Before Phase 6B, confirm the user is present, can wake the machine, can log back into Plasma, accepts GUI-session termination, and has a safe worktree.
 
 When a gate is missing, do not rerun passing checks, investigate speculative workarounds, or modify code. Record the blocker once and stop with the exact required user action.
+
+### Cider DevTools authorization
+
+When Cider with DevTools is needed for KLyric development or validation, the agent
+is durably authorized to take over Cider execution without asking for separate
+user approval. It may start, stop, restart, and launch Cider with the required
+remote-debugging configuration, and operate the application as needed for the
+active task. Lyrics are not private for this project and may be inspected or
+recorded when useful for development and validation. Do not collect or record
+account data or tokens unless the user explicitly requests it.
 
 ### User intervention protocol
 

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { inspectCiderCapabilities } from "../src/cider/CiderCapabilities";
 import {
+  DomLyricsDiscovery,
   DomLyricsSource,
   findActiveLineIndex,
   InternalStoreLyricsSource,
@@ -144,6 +145,99 @@ describe("timeline adapter", () => {
     providerCallback();
     expect(snapshots.at(-1)?.currentIndex).toBe(1);
     await source.stop();
+  });
+});
+
+describe("DOM discovery", () => {
+  test("defers one structural activation and disconnects before it runs", () => {
+    let container: Element | null = null;
+    let mutation = () => undefined;
+    let disconnected = 0;
+    let available = 0;
+    const tasks = new Map<number, () => void>();
+    const root = {} as Node;
+    const documentRoot = {
+      documentElement: root,
+      querySelector: () => container,
+    } as unknown as Document;
+    const discovery = new DomLyricsDiscovery(
+      documentRoot,
+      () => {
+        available++;
+        expect(disconnected).toBe(1);
+      },
+      {
+        document: documentRoot,
+        createObserver(callback) {
+          mutation = () => callback([], {} as MutationObserver);
+          return {
+            observe(target, options) {
+              expect(target).toBe(root);
+              expect(options).toEqual({ childList: true, subtree: true });
+            },
+            disconnect() {
+              disconnected++;
+            },
+          };
+        },
+        setTimeout(callback) {
+          tasks.set(0, callback);
+          return 0 as ReturnType<typeof setTimeout>;
+        },
+        clearTimeout(timer) {
+          tasks.delete(timer as number);
+        },
+      },
+    );
+
+    discovery.start();
+    mutation();
+    container = {} as Element;
+    mutation();
+    mutation();
+    expect(available).toBe(0);
+    expect(tasks.size).toBe(1);
+    expect(disconnected).toBe(1);
+
+    const callback = tasks.get(0);
+    tasks.delete(0);
+    callback?.();
+    expect(available).toBe(1);
+    expect(tasks.size).toBe(0);
+  });
+
+  test("cancels deferred activation when stopped", () => {
+    let mutation = () => undefined;
+    let available = 0;
+    let disconnected = 0;
+    const tasks = new Map<number, () => void>();
+    const documentRoot = {
+      documentElement: {} as Node,
+      querySelector: () => ({}) as Element,
+    } as unknown as Document;
+    const discovery = new DomLyricsDiscovery(documentRoot, () => available++, {
+      document: documentRoot,
+      createObserver(callback) {
+        mutation = () => callback([], {} as MutationObserver);
+        return { observe() {}, disconnect: () => disconnected++ };
+      },
+      setTimeout(callback) {
+        tasks.set(0, callback);
+        return 0 as ReturnType<typeof setTimeout>;
+      },
+      clearTimeout(timer) {
+        tasks.delete(timer as number);
+      },
+    });
+
+    discovery.start();
+    mutation();
+    expect(tasks.size).toBe(1);
+    discovery.stop();
+    discovery.stop();
+    expect(tasks.size).toBe(0);
+    expect(disconnected).toBe(1);
+    expect(available).toBe(0);
   });
 });
 

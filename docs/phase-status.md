@@ -796,3 +796,268 @@ connect because Cider was not running with remote debugging on port 9222. Do
 not continue release screenshot or tag work. Obtain a DevTools-enabled Cider
 session and escalate to GPT-5.6 Sol High to diagnose the structural DOM and
 plugin lifecycle mismatch without collecting lyric text.
+
+The DevTools-enabled diagnosis reproduced the lifecycle mismatch without
+collecting lyric text or track metadata. A fresh Cider 3.1.8 renderer was first
+idle with no lyric DOM. After the user started synchronized playback and opened
+Lyrics, the safe inspector reported descriptor `cider-3.1.8-dom`, an active
+Lyrics button, `.lyric-view-content`, 43 `.lyric-line` elements, one active
+line, playing audio, and an authorized/playing MusicKit instance. At that same
+instant, a structural KLyric runtime probe found a started plugin and matching
+renderer document, but no active factory source, no failed source kind, no
+pending retry timer, and `lyricsRetryAttempt: 3`.
+
+This isolates the root cause: the new retries run only at 500 ms, 1 second, and
+2 seconds after unavailable playing state. Once those 3.5 seconds elapse,
+KLyric has no event tied to later insertion of `.lyric-view-content`; opening
+Lyrics afterward cannot invoke source selection. The earlier live failure was
+therefore timing-dependent retry exhaustion, not a selector mismatch, source
+failure, wrong renderer document, or plugin reload failure. As a control,
+reloading the same installed plugin while Lyrics was already open immediately
+selected the DOM source; its factory and plugin both reported active kind `dom`.
+
+No implementation was modified in this Sol diagnosis batch. The known-scope
+follow-up is to replace or augment the elapsed-time-only recovery with an
+event-driven lyric-container appearance trigger that has deterministic cleanup,
+uses the existing serialized source factory, and does not poll or add lyric data
+to diagnostics. Screenshot and tagging work remains paused until focused tests
+and a live open-after-exhaustion scenario pass.
+
+### Event-driven lyric-container discovery implementation — 2026-07-12
+
+`DomLyricsDiscovery` now observes only structural `childList`/`subtree` mutations
+from the renderer document root and calls the existing lyric-container selector.
+It does not inspect lyric lines or text. It disconnects before its one-shot
+availability callback and has idempotent `stop()` cleanup. `KLyricPlugin` arms it
+only for active playing tracks with unavailable lyrics, invokes the existing
+serialized `LyricsSourceFactory` when a container appears, and stops it on
+source activation, track change, stop, teardown, and reload. The observer path
+has no diagnostics additions and no lyric payloads.
+
+Focused regression tests passed (26 pass): late discovery after all bounded
+retry timers had exhausted, duplicate discovery notifications, source activation
+cleanup, track change, playback stop, teardown, and helper observer cleanup.
+Changed-file Biome validation, `bun run typecheck`, `bun run build`, and `git
+diff --check` passed. Root `bun run format` and `bun run lint` were not runnable
+because Biome detected a pre-existing nested root configuration at
+`.claude/worktrees/agent-a45c5292310eb5076/biome.json`; equivalent changed-file
+format/check completed with `--config-path biome.json`. The release package was
+built, installed, and the user bridge service restarted successfully.
+
+The first live open-after-exhaustion validation did not pass. After the user
+opened Lyrics, bridge health reported `publisherSeen: true`, `stateAvailable:
+true`, and one client, but the redacted `/v1/state` fields remained
+`sourceKind: none`, `lyricsKind: unavailable`, `hasLyrics: false`, no current
+line, `playbackStatus: playing`, and `stale: true`. The safe DevTools inspector
+could not connect because `127.0.0.1:9222` refused connections. No lyric text or
+track metadata was collected. Screenshot and tagging work remains paused.
+
+The next task is a GPT-5.6 Sol High diagnosis in a DevTools-enabled Cider
+session: distinguish stale plugin/reload installation state from an event-driven
+observer lifecycle failure using only structural renderer/container/plugin state
+and redacted bridge flags before changing code.
+
+A fresh DevTools-enabled Cider session established the required pre-open
+baseline after the retry window: audio and MusicKit were playing, no lyric route
+or container existed, and the bridge still reported `sourceKind: none`,
+`lyricsKind: unavailable`, `hasLyrics: false`, no current line, and `stale: true`.
+When the user clicked the Lyrics button, Cider became unresponsive while audio
+continued. The DevTools target and bridge remained reachable, but the safe
+structural inspector timed out and the redacted bridge state did not change.
+The Cider process remained alive, and neither user nor kernel journals showed an
+OOM, segfault, or crash record. No lyric text or track metadata was collected.
+
+This is stronger evidence of a renderer-main-thread hang during Lyrics insertion,
+but it does not yet establish whether KLyric's event-driven mutation observer
+causes the hang or whether Cider's Lyrics renderer failed independently. Do not
+modify code, resume screenshots, or tag. The unresponsive Cider process must not
+be terminated without user approval. After approval, recover Cider and perform
+one controlled reproduction that isolates observer causality using structural
+and plugin-lifecycle state only.
+
+The user approved terminating the unresponsive process. After a fresh
+DevTools-enabled restart, a structural runtime evaluation found the installed
+KLyric instance present and started, then explicitly tore it down in memory;
+`isStartedAfter` was false and the renderer remained responsive. With KLyric
+inactive, the user repeated synchronized playback and opened Lyrics normally.
+The safe inspector completed and reported descriptor `cider-3.1.8-dom`, an
+active Lyrics control, the lyric container, 43 line elements, one active index,
+and playing audio. It returned no lyric text or track metadata.
+
+This control isolates the renderer hang to active KLyric behavior rather than a
+host-only Cider Lyrics rendering failure. The current event-driven implementation
+starts source selection synchronously from a document-wide mutation delivery
+callback; that reentrant activation path is the strongest code-level suspect.
+The follow-up is now a known-scope Terra High fix: defer the one-shot availability
+callback out of the mutation delivery turn, preserve deterministic cancellation,
+add regression coverage for deferred activation and cancellation, and repeat the
+live open-after-exhaustion scenario. Screenshot and tagging remain paused.
+
+### Deferred discovery activation validation — 2026-07-12
+
+`DomLyricsDiscovery` now disconnects after its first structural container match
+and schedules its one-shot availability callback with a zero-delay task instead
+of invoking it from the document-wide `MutationObserver` delivery turn. The
+pending task is canceled by idempotent `stop()`, so source activation cannot begin
+after playback eligibility changes, track replacement, teardown, or reload. The
+plugin remains the sole source-activation owner: its existing availability
+eligibility, generation, factory/signal identity, pending-state, and serialized
+`LyricsSourceFactory` guards remain unchanged.
+
+Focused tests pass (27 pass): discovery activation waits for the deferred task,
+duplicate mutations produce one task/callback, cancellation before task delivery
+prevents activation, retry exhaustion has no pre-task source start, and lifecycle
+cancellation prevents a deferred start. Changed-file Biome validation, `bun run
+typecheck`, `bun run build`, and `git diff --check` passed. The release package
+was rebuilt. Initial installation hit `ETXTBSY` while replacing the active bridge
+binary; after stopping `klyric-bridge.service`, `bun run install:local` completed
+and restarted the service successfully.
+
+The user then ran the required privacy-safe live scenario with KLyric active:
+with Lyrics closed through retry exhaustion and synchronized playback, opening
+Lyrics remained responsive (`live pass`). No lyric text or track metadata was
+collected. This clears the renderer-hang execution gate; screenshot work may
+resume. Task 8.9 remains incomplete pending its required privacy-safe product
+screenshot, while release notes, checksums, and limitations remain prepared.
+
+### Privacy-safe product screenshot — 2026-07-12
+
+The user captured `docs/klyric-empty-state.png`, a 284×86 KLyric empty-state
+panel/widget image. Independent visual review confirmed that it contains no
+lyric text, track metadata, account data, tokens, or other private content.
+The required screenshot has been captured and cleared for release collateral.
+Task 8.9 still requires a final consistency review of the already-prepared
+release notes, checksum manifests, and limitations before it can be marked
+complete.
+
+### Release collateral consistency review — 2026-07-12
+
+Task 8.9 is complete. The v0.1.0 release notes, installation guide, and release
+readiness record consistently identify Cider 3.1.8-1, Plasma 6.7.2, the
+Lyrics-view-open compatibility limitation, loopback-only bridge, Bun requirement,
+SHA-256 verification, and MIT licensing. Both the nested release `SHA256SUMS`
+and combined archive manifest verified successfully. The privacy-safe empty-state
+screenshot is now linked from `docs/release-readiness.md`. The next task is 8.10:
+commit the validated release changes and, only after explicit user authorization,
+create the outward-facing `v0.1.0` tag.
+
+### Release-blocking lyric display failure — 2026-07-12
+
+Before committing or tagging, the user reported the primary feature failure with
+a local screenshot (not copied into this repository): Cider was playing with its
+Lyrics table open, while the KLyric widget displayed playback metadata but no
+lyric line. This invalidates the prior release-readiness conclusion. The
+subsequent redacted bridge probe was taken while paused and showed
+`sourceKind: none`, `lyricsKind: unavailable`, `hasLyrics: false`, null current
+line/index, and stale state; it cannot establish the exact screenshot-time
+state, but it confirms that an unavailable state is a possible widget fallback.
+No lyric text, track metadata, account data, or tokens were collected.
+
+The code path needs structured diagnosis before any fix. `DomLyricsSource` only
+emits when its container selector finds an active line and nonempty text
+(`apps/cider-plugin/src/cider/lyrics/DomLyricsSource.ts`); its broad element
+selector can also make `currentIndex` inconsistent with the filtered line list.
+On track changes, `KLyricPlugin` deliberately drops the first DOM snapshot with
+no `trackId`; if no later DOM mutation occurs, that can leave the source active
+but the state without lyrics. Downstream, a valid state with null `currentLine`
+causes the state machine to publish `playing-without-lyrics`, and the widget
+falls back to metadata. Bridge publication and widget protocol rejection remain
+separate possibilities.
+
+Phase 8 is blocked. Do not commit release collateral, create `v0.1.0`, or
+complete task 8.9 until a privacy-safe live diagnosis proves the actual break
+point and a subsequent fix passes regression and end-to-end widget acceptance.
+The next session must use GPT-5.6 Sol High and inspect only structural/container
+presence, active/line counts, source kind, source snapshot counts, phase,
+`hasLyrics`, current-index presence, bridge acceptance/state flags, and widget
+protocol/display-state fields; never collect lyric text or track metadata.
+
+### DOM-to-widget pipeline diagnosis — 2026-07-12
+
+The requested privacy-safe diagnosis isolated a deterministic plugin-state loss.
+On every real track replacement, `restartLyrics()` sets
+`ignoreUnidentifiedLyrics`; every `DomLyricsSource` snapshot omits `trackId`, and
+`DomLyricsSource.start()` performs its initial read synchronously. The plugin
+therefore discards the newly restarted DOM source's first valid snapshot rather
+than proving that it came from the superseded source. If the DOM does not mutate
+again, the state remains stale and unavailable even though the source is active.
+
+A privacy-safe synthetic reproduction used an initial-only DOM-like source and
+two playback track identities. The source started twice. After the replacement,
+its restarted initial snapshot was dropped and the latest protocol flags were
+`sourceKind: dom`, `lyricsKind: unavailable`, `hasLyrics: false`, no current
+line/index, and `stale: true`. No lyric text, track metadata, account data, or
+tokens were printed or retained. This establishes the loss boundary between
+source snapshot emission and `PluginStateMachine.setLyrics()` and directly
+supports hypothesis 3.
+
+The other hypotheses were assessed against code and prior live structural
+evidence. `DomLyricsSource` still requires an active selector match and nonempty
+content before emitting, but the prior Cider probe reported one active line among
+43 lines. Its broad element selector has a confirmed correctness defect:
+`currentIndex` is computed before empty elements are filtered from `lines`, so
+neighbor indices can diverge; this does not suppress the independently emitted
+`currentLine` and is not the reproduced primary-line failure. Bridge validation,
+storage, WebSocket fan-out, and horizontal widget formatting all preserve a
+protocol-valid nonempty current line; the prior unavailable bridge state and the
+synthetic reproduction place the failure upstream. The widget's metadata output
+is its expected fallback when `currentLine` is null.
+
+Live Cider diagnosis was not available in this batch: no Cider process or DevTools
+target on port 9222 was running. The installed bridge remained active on its
+configured loopback port and safely reported `publisherSeen: false`,
+`stateAvailable: false`, and one connected widget client, which is consistent
+with Cider being absent and does not add screenshot-time evidence. Existing
+focused tests passed (27 pass, 0 fail), and `git diff --check` passed. No source
+implementation was modified.
+
+The minimal fix is now known-scope: replace the global
+`ignoreUnidentifiedLyrics` first-snapshot heuristic with source-generation
+ownership. Each source start/restart callback must be accepted only while its
+captured generation remains current, allowing the new DOM source's synchronous
+initial snapshot while rejecting callbacks from superseded source contexts.
+Add a plugin-level regression that establishes lyrics on one track, replaces the
+track, makes the restarted DOM-like source emit only one untagged synchronous
+snapshot, and requires immediate `hasLyrics: true`, non-stale state without
+advancing retries. Also retain tests for superseded callback rejection and
+track/teardown cancellation. Then rerun the focused plugin/lyrics tests,
+format/lint/typecheck/build as appropriate, install the plugin, and perform one
+privacy-safe live track-change acceptance: record only source start/emission and
+acceptance counts, phase/kind/boolean/index-presence fields, bridge acceptance and
+state availability, widget protocol validity, and rendered-current-line
+presence. Keep Phase 8 and release work blocked until that scenario passes.
+
+
+### Source-generation ownership regression fix — 2026-07-12
+
+`KLyricPlugin` no longer uses the global `ignoreUnidentifiedLyrics` heuristic.
+Every `startLyrics()` invocation now captures a monotonically increasing
+source-start generation. Its snapshot and error callbacks, plus the asynchronous
+factory result, are accepted only while that generation, factory, abort signal,
+and plugin lifecycle remain current. A newly restarted DOM source can therefore
+publish its synchronous untagged initial snapshot immediately; callbacks retained
+by a superseded source cannot overwrite state or initiate recovery.
+
+A plugin-level DOM-like source regression establishes lyrics on track A, replaces
+it with track B, and emits exactly one sanitized untagged synchronous snapshot on
+each start. The replacement immediately reaches `sourceKind: dom`,
+`lyricsKind: line-synced`, `hasLyrics: true`, non-stale state, and a present
+current line without retry advancement. The same test proves stale snapshot and
+error callbacks cannot mutate the replacement state or start recovery, and that
+post-teardown callbacks have no effect. The separate DOM filtered-index issue
+remains intentionally out of scope.
+
+Focused plugin and lyrics tests passed (28 pass, 0 fail). Changed-file Biome
+format/lint with `--config-path biome.json`, full `bun run typecheck`, `bun run
+build`, and `git diff --check` passed. Root `bun run format` and `bun run lint`
+remain NOT RUN because pre-existing nested `.claude/worktrees/*/biome.json` root
+configurations cause Biome root-configuration errors. Local installation first
+hit the known active-binary `ETXTBSY`; after stopping `klyric-bridge.service`,
+`bun run install:local` succeeded and the bridge service is active.
+
+Cider and DevTools port 9222 were unavailable, so privacy-safe live track-change
+acceptance is NOT RUN. The bridge health probe reported only `publisherSeen:
+false`, `stateAvailable: false`, and one widget client. No lyric text, track
+metadata, account data, or tokens were collected. Phase 8 and release work remain
+blocked until one live scenario proves source emission/acceptance, bridge state
+availability, protocol-valid widget state, and rendered current-line presence.
