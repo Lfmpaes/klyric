@@ -10,7 +10,7 @@ As of 2026-07-11, the workspace has a usable local git repository and the `main`
 | 3 — Bridge MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 4 — Cider plugin MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 5 — Plasma widget MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
-| 6 — Integration hardening | in_progress | GPT-5.6 Sol | High | — |
+| 6 — Integration hardening | complete | GPT-5.6 Terra | Medium | 2026-07-12 |
 | 7 — Packaging and installation | pending | GPT-5.6 Terra | Medium | — |
 | 8 — Release readiness | pending | GPT-5.6 Sol | High | — |
 
@@ -692,3 +692,15 @@ terminate the active GUI and Codex session. After logging back in, start a new
 Codex session with the continuation prompt in `AGENTS.md`; verify that the
 running bridge reports the restored KLyric applet as a client, record the
 result, and only then complete task 6.6 and Phase 6.
+
+On 2026-07-12, following the user’s full Plasma logout/login, the pre-existing
+transient `klyric-phase6b.service` bridge remained active on loopback port
+37654. Two post-login `/health` probes eight seconds apart each reported
+`publisherSeen: true`, `stateAvailable: true`, and one connected widget client.
+This is redacted evidence that restored applet 53 reconnected automatically.
+The bridge journal contains only its startup and accepted-publication event
+names, without lyric text or secrets. This completes the full Plasma-session
+restart scenario (task 6.6) and the final end-to-end matrix row. Along with the
+previous suspend/resume validation, tasks 6.1 and 6.7 and all Phase 6 exit
+criteria are complete. `docs/integration-testing.md` records the completed row
+and restored desktop baseline.

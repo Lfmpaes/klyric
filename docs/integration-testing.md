@@ -87,7 +87,7 @@ can be reconsidered.
 | Font setting extremes | PASS — live runtime | `fontSizeAdjustment=-6` rendered legibly in both real orientations. After `Text.VerticalFit` was installed, `+12` remained fully bounded in the real 32 px horizontal panel. The setting was restored to zero. |
 | Horizontal `plasmoidviewer` | PASS — runtime smoke | The required command loaded for ten seconds without a QML error after Plasma SDK was installed. |
 | Real system suspend/resume | PASS — live runtime | One user-performed suspend/resume cycle preserved bridge health and one connected widget client across two post-resume probes. |
-| Full Plasma session restart | MANUAL — NOT RUN | Requires user logout/login and terminates the active GUI development session. |
+| Full Plasma session restart | PASS — live runtime | After the user logged out and back into Plasma, the pre-existing transient `klyric-phase6b.service` bridge remained active. Its two post-login `/health` probes (eight seconds apart) each reported `publisherSeen: true`, `stateAvailable: true`, and one connected client, confirming restored applet 53 reconnection. |
 
 ## Security, privacy, and resource audit
 
@@ -115,8 +115,8 @@ can be reconsidered.
   the original real widget reconnected to a restarted bridge without a
   PlasmaShell restart and displayed a newly published RTL fixture.
 
-## Remaining manual completion checklist
+## Phase 6 completion checklist
 
-- Restart the Plasma session and confirm the widget reconnects.
-- The desktop is restored: Breeze Dark, 100% scale, applet 53 font zero, no
-  temporary panel or widget, and no temporary bridge.
+All Phase 6 manual acceptance scenarios have passed. The desktop remains in its
+restored baseline: Breeze Dark, 100% scale, applet 53 font zero, and no
+temporary panel or widget.

@@ -23,22 +23,22 @@ Read either complete document only when the checkpoint is inconsistent, architec
 
 Update this section once after a meaningful implementation or validation batch, when a material blocker changes, or when the phase status changes.
 
-- **Current phase:** Phase 6 — Integration hardening
+- **Current phase:** Phase 7 — Packaging and installation
 - **Phase status:** `in_progress`
-- **Current work mode:** Phase 6B — Manual desktop acceptance
-- **Current task:** 6.6 — Verify all restart scenarios
-- **Current validation focus:** Prepare the required full Plasma logout/login scenario and verify applet reconnection after login
+- **Current work mode:** Phase 7 — Packaging and installation
+- **Current task:** 7.1 — Finalize the systemd user service
+- **Current validation focus:** Inspect the existing service and installation workflow before making the first packaging implementation change
 - **Recommended next model:** GPT-5.6 Terra
 - **Reasoning:** Medium
-- **Escalation:** GPT-5.6 Sol — High only if the post-login bridge or applet recovery fails without a known cause
-- **Last completed task:** 6.7 — Verify suspend/resume and multiple widgets
+- **Escalation:** GPT-5.6 Sol — High only for an unexplained packaging, lifecycle, or installation-recovery defect
+- **Last completed task:** Phase 6 — Integration hardening
 - **Last verified implementation commit:** `f00ef43` — harden panel layout and WebSocket reconnect
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
-- **Last validation:** Following a user-performed suspend/resume, the bridge remained healthy and stable (`publisherSeen: true`, `stateAvailable: true`, one widget client) for a second probe eight seconds later. Cider 3.1.8 DevTools remained reachable. The Cider runtime was idle after resume, so the redacted inspection correctly reported no active lyric DOM and descriptor `unsupported`; this did not affect bridge/widget reconnection evidence.
-- **Known blockers:** A full Plasma logout requires the user to log back in and terminates the active GUI/Codex session. Cider 3.1.8 requires its Lyrics view open for live DOM lyrics.
-- **Execution gate:** The user confirmed they are present, can wake the machine, can log back into Plasma, and accept termination of the current GUI session.
-- **Next exact action:** Record the logout-safe checkpoint, then ask the user to log out of Plasma and start the post-login verification session.
-- **Last updated:** 2026-07-12 — Suspend/resume passed; the only remaining Phase 6B scenario is full Plasma logout/login recovery.
+- **Last validation:** Following a user-performed full Plasma logout/login, the running transient bridge remained healthy. Two `/health` probes eight seconds apart reported `publisherSeen: true`, `stateAvailable: true`, and one widget client, confirming restored applet 53 reconnection. The prior suspend/resume scenario passed with the same health evidence.
+- **Known blockers:** Cider 3.1.8 requires its Lyrics view open for live DOM lyrics; this is a documented compatibility limitation, not a Phase 7 blocker.
+- **Execution gate:** Phase 6B manual desktop acceptance is complete; no disruptive action is required to begin Phase 7 task 7.1.
+- **Next exact action:** Inspect the current systemd user-service implementation and define the smallest scoped changes for task 7.1.
+- **Last updated:** 2026-07-12 — Full Plasma logout/login recovery passed; Phase 6 is complete and Phase 7 is next.
 
 Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 
@@ -196,12 +196,12 @@ Rules:
 - [x] **6.10** Fix leaks, stale timers, queues, and recovery defects.
 - [x] **6.11** Update compatibility and test documentation.
 
-#### Phase 6B — Manual desktop acceptance: blocked
+#### Phase 6B — Manual desktop acceptance: complete
 
-- [ ] **6.1** Complete the end-to-end scenario matrix. BLOCKED — suspend/resume needs a user-present wake.
-- [ ] **6.6** Verify all restart scenarios. BLOCKED — Plasma logout requires the user to log back in.
-- [ ] **6.7** Verify suspend/resume and multiple widgets. BLOCKED — multiple widgets pass; suspend/resume needs the user present.
-- [ ] **Phase 6 complete**.
+- [x] **6.1** Complete the end-to-end scenario matrix.
+- [x] **6.6** Verify all restart scenarios.
+- [x] **6.7** Verify suspend/resume and multiple widgets.
+- [x] **Phase 6 complete**.
 
 ### Phase 7 — Packaging and installation
 
