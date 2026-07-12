@@ -15,6 +15,10 @@ documented in [docs/bridge.md](docs/bridge.md).
 Installation, upgrades, removal, and troubleshooting are documented in
 [docs/installation.md](docs/installation.md).
 
+The v0.1.0 highlights and release limitations are in
+[RELEASE_NOTES.md](RELEASE_NOTES.md); the complete release audit is in
+[docs/release-readiness.md](docs/release-readiness.md).
+
 The Phase 6 scenario matrix, performance results, compatibility table,
 security audit, and remaining manual checks are in
 [docs/integration-testing.md](docs/integration-testing.md).

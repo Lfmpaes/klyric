@@ -55,9 +55,45 @@ await copyFile(
   join(staging, "klyric-bridge.service"),
 );
 
-const artifacts = (await readdir(staging)).filter(
-  (filename) => filename !== "cider-plugin",
+const releaseScripts = join(staging, "scripts");
+await recreateDirectory(releaseScripts);
+for (const filename of [
+  "install-local.ts",
+  "local-installation.ts",
+  "release-utils.ts",
+  "uninstall-local.ts",
+  "verify-environment.ts",
+]) {
+  await copyFile(
+    join(root, "scripts", filename),
+    join(releaseScripts, filename),
+  );
+}
+for (const filename of ["LICENSE", "README.md", "RELEASE_NOTES.md"]) {
+  await copyFile(join(root, filename), join(staging, filename));
+}
+await Bun.write(
+  join(staging, "package.json"),
+  `${JSON.stringify(
+    {
+      name: "klyric-release",
+      version,
+      private: true,
+      type: "module",
+      scripts: {
+        "install:local": "bun run scripts/install-local.ts",
+        "uninstall:local": "bun run scripts/uninstall-local.ts",
+        verify: "bun run scripts/verify-environment.ts",
+      },
+    },
+    null,
+    2,
+  )}\n`,
 );
+
+const artifacts = (await readdir(staging, { withFileTypes: true }))
+  .filter((entry) => entry.isFile())
+  .map((entry) => entry.name);
 const checksums = Bun.spawn(["sha256sum", ...artifacts], {
   cwd: staging,
   stdout: "pipe",

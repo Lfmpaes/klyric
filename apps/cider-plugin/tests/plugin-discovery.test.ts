@@ -9,6 +9,6 @@ describe("Cider plugin discovery", () => {
     expect(manifest).toContain("identifier: dev.luizpaes.klyric");
     expect(manifest).toContain("name: KLyric");
     expect(manifest).toContain("version: 0.1.0");
-    expect(manifest).toMatch(/entry:\n  plugin\.js:\n    type: main(?:\n|$)/);
+    expect(manifest).toMatch(/entry:\n {2}plugin\.js:\n {4}type: main(?:\n|$)/);
   });
 });

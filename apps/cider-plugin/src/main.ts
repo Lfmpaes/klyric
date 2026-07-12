@@ -72,15 +72,13 @@ const plugin: CiderPluginContext = {
   identifier: "dev.luizpaes.klyric",
   name: "KLyric",
   pluginKitVersion: "4",
-  repo: "",
+  repo: "https://github.com/Lfmpaes/klyric",
   setup() {
     const host = globalThis as PluginHost;
     const runtime = host[runtimeKey] ?? {};
     host[runtimeKey] = runtime;
-    console.info("[KLyric] Redacted Cider capability report", {
-      ...runCapabilityInspection(),
-      note: "Capability names only; no lyric text or host state is serialized.",
-    });
+    // Capability data remains in the in-memory diagnostics snapshot. Release
+    // builds do not emit routine capability reports to Cider's developer log.
     const diagnostics = new Diagnostics(
       plugin.version,
       runCapabilityInspection(),
