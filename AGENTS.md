@@ -23,22 +23,22 @@ Read either complete document only when the checkpoint is inconsistent, architec
 
 Update this section once after a meaningful implementation or validation batch, when a material blocker changes, or when the phase status changes.
 
-- **Current phase:** Phase 7 — Packaging and installation
-- **Phase status:** `in_progress`
-- **Current work mode:** Phase 7 — Packaging and installation
-- **Current task:** 7.1 — Finalize the systemd user service
-- **Current validation focus:** Inspect the existing service and installation workflow before making the first packaging implementation change
+- **Current phase:** Phase 8 — Release readiness
+- **Phase status:** `pending`
+- **Current work mode:** Phase 7 handoff
+- **Current task:** 8.1 — Verify licenses and bundled assets
+- **Current validation focus:** Begin the release-readiness audit from the completed Phase 7 artifacts
 - **Recommended next model:** GPT-5.6 Terra
-- **Reasoning:** Medium
-- **Escalation:** GPT-5.6 Sol — High only for an unexplained packaging, lifecycle, or installation-recovery defect
-- **Last completed task:** Phase 6 — Integration hardening
-- **Last verified implementation commit:** `f00ef43` — harden panel layout and WebSocket reconnect
+- **Reasoning:** High
+- **Escalation:** GPT-5.6 Sol — High only for a compatibility, architecture, privacy, security, or unexplained final-acceptance defect
+- **Last completed task:** Phase 7 — Packaging and installation
+- **Last verified implementation commit:** `1f461e5` — add release installation workflow
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
-- **Last validation:** Following a user-performed full Plasma logout/login, the running transient bridge remained healthy. Two `/health` probes eight seconds apart reported `publisherSeen: true`, `stateAvailable: true`, and one widget client, confirming restored applet 53 reconnection. The prior suspend/resume scenario passed with the same health evidence.
-- **Known blockers:** Cider 3.1.8 requires its Lyrics view open for live DOM lyrics; this is a documented compatibility limitation, not a Phase 7 blocker.
-- **Execution gate:** Phase 6B manual desktop acceptance is complete; no disruptive action is required to begin Phase 7 task 7.1.
-- **Next exact action:** Inspect the current systemd user-service implementation and define the smallest scoped changes for task 7.1.
-- **Last updated:** 2026-07-12 — Full Plasma logout/login recovery passed; Phase 6 is complete and Phase 7 is next.
+- **Last validation:** `bun run format`, `lint`, `typecheck`, `build`, and `package` passed; the unrestricted full suite passed 67 tests. The packaging lifecycle test proved disposable clean install, upgrade token preservation, health checking, uninstall, and `--purge`; archive checksums and systemd unit syntax also passed.
+- **Known blockers:** Cider 3.1.8 requires its Lyrics view open for live DOM lyrics; this remains a documented compatibility limitation.
+- **Execution gate:** Phase 7 is complete. Do not begin Phase 8 work without a new continuation request.
+- **Next exact action:** Audit licenses and bundled assets for task 8.1.
+- **Last updated:** 2026-07-12 — Phase 7 packaging and installation complete at `1f461e5`.
 
 Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 
@@ -207,18 +207,18 @@ Rules:
 
 **Default model:** GPT-5.6 Terra — Medium
 
-- [ ] **7.1** Finalize the systemd user service.
-- [ ] **7.2** Implement install, upgrade, uninstall, and `--purge`.
-- [ ] **7.3** Package the Cider plugin.
-- [ ] **7.4** Package the Plasma widget.
-- [ ] **7.5** Build the bridge release artifact.
-- [ ] **7.6** Generate checksums and the combined archive.
-- [ ] **7.7** Add environment and post-install checks.
-- [ ] **7.8** Add installation and troubleshooting documentation.
-- [ ] **7.9** Add and test the release workflow.
-- [ ] **7.10** Add the optional Arch `PKGBUILD` after manual packaging works.
-- [ ] **7.11** Verify clean install, upgrade, startup, and uninstall.
-- [ ] **Phase 7 complete**.
+- [x] **7.1** Finalize the systemd user service.
+- [x] **7.2** Implement install, upgrade, uninstall, and `--purge`.
+- [x] **7.3** Package the Cider plugin.
+- [x] **7.4** Package the Plasma widget.
+- [x] **7.5** Build the bridge release artifact.
+- [x] **7.6** Generate checksums and the combined archive.
+- [x] **7.7** Add environment and post-install checks.
+- [x] **7.8** Add installation and troubleshooting documentation.
+- [x] **7.9** Add and test the release workflow.
+- [x] **7.10** Add the optional Arch `PKGBUILD` after manual packaging works.
+- [x] **7.11** Verify clean install, upgrade, startup, and uninstall.
+- [x] **Phase 7 complete**.
 
 ### Phase 8 — Release readiness
 

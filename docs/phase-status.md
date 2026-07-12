@@ -704,3 +704,31 @@ restart scenario (task 6.6) and the final end-to-end matrix row. Along with the
 previous suspend/resume validation, tasks 6.1 and 6.7 and all Phase 6 exit
 criteria are complete. `docs/integration-testing.md` records the completed row
 and restored desktop baseline.
+
+## Phase 7 journal
+
+Completed 2026-07-12. The release workflow is implemented in `1f461e5`.
+`packaging/systemd/klyric-bridge.service` starts the compiled bridge with its
+supported default CLI and constrains filesystem and address-family access;
+`systemd-analyze verify` completed successfully (with sandbox user-socket
+warnings only).
+
+`bun run package` now creates a compiled bridge, Cider plugin ZIP, Plasma
+package archive, systemd unit, component checksums, and a combined tarball in
+`dist/release`. The local installer supports `--source`, backs up replaced
+user-local files, honors practical XDG path overrides, enables the user unit,
+confirms/generates the token without printing it, and waits for bridge health.
+The uninstaller preserves settings by default and removes them only with
+`--purge`.
+
+The focused lifecycle test performed a disposable-XDG clean install, repeat
+install (preserving its token), post-install health check, uninstall, and purge.
+It also validates packaged plugin/widget artifacts. The unrestricted full suite
+passed: 67 tests, 0 failures. `bun run format`, `bun run lint`, `bun run
+typecheck`, `bun run build`, `bun run package`, archive checksum verification,
+and `git diff --check` passed. The GitHub release workflow runs the same local
+checks, validates checksums, and uploads the release directory; it has not yet
+been executed by GitHub because no release tag has been pushed.
+
+Phase 7 is complete. Phase 8 begins at task 8.1: verify licenses and bundled
+assets. Cider 3.1.8 still requires its Lyrics view open for live DOM lyrics.
