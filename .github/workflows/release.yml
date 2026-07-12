@@ -1,7 +1,12 @@
-name: Release
+name: Release artifacts
 
 on:
+  push:
+    tags: ["v*"]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   package:
@@ -10,4 +15,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun run build
       - run: bun run package
+      - run: sha256sum --check SHA256SUMS
+        working-directory: dist/release
+      - run: sha256sum --check SHA256SUMS
+        working-directory: dist/release/klyric-0.1.0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: klyric-release
+          path: dist/release/
+          if-no-files-found: error

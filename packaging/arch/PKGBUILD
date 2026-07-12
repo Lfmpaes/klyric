@@ -1,0 +1,27 @@
+pkgname=klyric
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Cider synchronized lyric line widget for KDE Plasma 6"
+arch=('x86_64')
+url="https://github.com/Lfmpaes/klyric"
+license=('MIT')
+depends=('bun' 'plasma-workspace')
+makedepends=('bun')
+source=("$pkgname-$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$pkgname-$pkgver"
+  bun install --frozen-lockfile
+  bun build --compile apps/bridge/src/index.ts --outfile klyric-bridge
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 klyric-bridge "$pkgdir/usr/bin/klyric-bridge"
+  install -Dm644 packaging/systemd/klyric-bridge.service \
+    "$pkgdir/usr/lib/systemd/user/klyric-bridge.service"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  cp -a apps/plasmoid/package/. \
+    "$pkgdir/usr/share/plasma/plasmoids/dev.luizpaes.klyric/"
+}

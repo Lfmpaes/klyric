@@ -12,6 +12,9 @@ between those components.
 Bridge configuration, token management, and its local HTTP/WebSocket API are
 documented in [docs/bridge.md](docs/bridge.md).
 
+Installation, upgrades, removal, and troubleshooting are documented in
+[docs/installation.md](docs/installation.md).
+
 The Phase 6 scenario matrix, performance results, compatibility table,
 security audit, and remaining manual checks are in
 [docs/integration-testing.md](docs/integration-testing.md).

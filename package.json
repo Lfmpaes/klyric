@@ -16,8 +16,10 @@
     "test": "bun test",
     "test:extraction": "bun test apps/cider-plugin/tests",
     "package": "bun run scripts/package-release.ts",
-    "install": "bun run scripts/install-local.ts",
-    "uninstall": "bun run scripts/uninstall-local.ts",
+    "install": "bun run install:local",
+    "install:local": "bun run scripts/install-local.ts",
+    "uninstall": "bun run uninstall:local",
+    "uninstall:local": "bun run scripts/uninstall-local.ts",
     "verify": "bun run scripts/verify-environment.ts"
   },
   "devDependencies": {

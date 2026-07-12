@@ -1,1 +1,3 @@
-console.info("Local uninstallation is scheduled for Phase 7.");
+import { parseUninstallOptions, uninstallLocal } from "./local-installation";
+
+await uninstallLocal(parseUninstallOptions(process.argv.slice(2)));
