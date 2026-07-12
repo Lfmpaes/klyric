@@ -25,20 +25,20 @@ Update this section once after a meaningful implementation or validation batch, 
 
 - **Current phase:** Phase 8 — Release readiness
 - **Phase status:** `in_progress`
-- **Current work mode:** Phase 8 release blocked pending privacy-safe live track-change acceptance
-- **Current task:** Run the privacy-safe live DOM-to-widget track-change scenario with the installed source-generation fix
-- **Current validation focus:** Confirm the restarted DOM source's initial snapshot reaches the plugin, bridge, protocol-valid widget state, and rendered current line
-- **Recommended next model:** GPT-5.6 Terra
-- **Reasoning:** Medium
-- **Escalation:** GPT-5.6 Sol High only if the source-generation regression passes but live acceptance loses lyric state at an unexplained boundary
-- **Last completed task:** Implemented and regression-tested source-generation ownership for lyric callbacks
-- **Last verified implementation commit:** `275a341` — retry delayed lyric discovery (all Phase 8 discovery and ownership changes remain uncommitted)
+- **Current work mode:** Phase 8 release blocked by an unexplained live post-track-change state loss
+- **Current task:** Diagnose the live DOM-source-to-state-machine loss after a track replacement
+- **Current validation focus:** Explain why a live active DOM source reaches `sourceKind: dom` while normalized lyrics remain unavailable after the validated source-generation fix
+- **Recommended next model:** GPT-5.6 Sol
+- **Reasoning:** High
+- **Escalation:** Active — the known source-generation defect is fixed, but live acceptance still loses lyrics upstream of bridge/widget delivery
+- **Last completed task:** Ran the authorized DevTools-enabled live track-change acceptance and reproduced the remaining state loss
+- **Last verified implementation commit:** `0204d5c` — preserve DOM snapshots across track changes
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
-- **Last validation:** Focused plugin and lyrics tests passed (28 pass, 0 fail). Changed-file Biome format/lint with `--config-path biome.json`, full `typecheck`, `build`, and `git diff --check` passed. Root `bun run format`/`bun run lint` remain unavailable because pre-existing nested `.claude/worktrees/*/biome.json` root configurations conflict with the repository configuration. The local plugin installation succeeded after stopping the active user bridge service to avoid `ETXTBSY`, and the service is active. Cider and DevTools port 9222 were unavailable, so the required live track-change scenario was NOT RUN. Bridge health safely reported `publisherSeen: false`, `stateAvailable: false`, and one widget client; no lyric text, metadata, account data, or tokens were collected.
-- **Known blockers:** RELEASE BLOCKER — automated source-generation ownership now accepts the restarted DOM source's untagged synchronous initial snapshot and rejects superseded/teardown callbacks, but privacy-safe end-to-end track-change acceptance has not run because Cider and DevTools were unavailable. The broad DOM selector's filtered-index inconsistency remains confirmed but out of scope; do not commit release collateral or create `v0.1.0`.
-- **Execution gate:** Do not tag or release until a privacy-safe live track-change scenario proves source snapshot emission/acceptance, bridge state availability, protocol-valid widget state, and rendered current-line presence.
-- **Next exact action:** Start Cider with DevTools available, ensure the installed KLyric plugin and bridge are active, perform one synchronized track change with Lyrics open, and collect only the approved redacted structural/protocol flags.
-- **Last updated:** 2026-07-12 — source-generation ownership fix and focused regression validation completed; live acceptance is still required.
+- **Last validation:** DevTools-enabled Cider 3.1.8 started and played synchronized content with Lyrics open. A programmatic track change reported `changed: true`, `playing: true`, 61 DOM lines, and active index 0. Bridge health reported `publisherSeen: true`, `stateAvailable: true`, and one widget client, but its redacted state was `sourceKind: dom`, `lyricsKind: unavailable`, `hasLyrics: false`, no current line/index, `playbackStatus: playing`, and `stale: true`. The same unavailable state was present before the change while Lyrics had not yet rendered. Focused plugin/lyrics tests passed (28 pass, 0 fail); changed-file Biome format/lint, full typecheck/build, and diff check passed. No account data or tokens were collected.
+- **Known blockers:** RELEASE BLOCKER — source-generation ownership accepts the replacement source in regression tests, but the real DOM source is active after track change while no lyric snapshot reaches the state machine. Bridge and widget are downstream of the reproduced loss. The broad filtered-index inconsistency remains a separate issue. Do not commit release collateral or create `v0.1.0`.
+- **Execution gate:** Do not tag or release until Sol identifies the live source-to-state loss, a focused fix passes, and the privacy-safe live track-change scenario proves a protocol-valid rendered current line.
+- **Next exact action:** With Sol High, use DevTools to inspect the active `DomLyricsSource` lifecycle and its snapshot/error callback delivery across the track change, then isolate the loss boundary without touching account data or tokens.
+- **Last updated:** 2026-07-12 — authorized DevTools live validation reproduced unavailable lyrics despite an active DOM source after track replacement; Sol diagnosis is required.
 
 Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 
@@ -246,7 +246,7 @@ Rules:
 - Apply task-based model routing instead of locking every continuation to the phase’s historical model.
 - Run the smallest relevant checks during a focused batch; run the full suite before phase completion or after broad cross-component changes.
 - Mark `blocked` only for a concrete external blocker.
-- End with the handoff report and stop.
+- Work continuously through the current task and its safe, in-scope follow-ups. Stop immediately only when the user requests it, an execution gate requires user intervention, or escalation to another model is warranted. On stopping, provide the required handoff and ready-to-copy continuation prompt.
 
 ### Disruptive execution gates
 

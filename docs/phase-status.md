@@ -1061,3 +1061,26 @@ false`, `stateAvailable: false`, and one widget client. No lyric text, track
 metadata, account data, or tokens were collected. Phase 8 and release work remain
 blocked until one live scenario proves source emission/acceptance, bridge state
 availability, protocol-valid widget state, and rendered current-line presence.
+
+### Authorized DevTools live track-change acceptance — 2026-07-12
+
+Cider 3.1.8 was launched with DevTools on port 9222 under the new durable
+execution authorization. A catalog synchronized track was started and Lyrics was
+opened programmatically. A subsequent programmatic track replacement reported
+only `changed: true` and `playing: true`; structural inspection reported the DOM
+adapter descriptor, 61 `.lyric-line` elements, and active index 0. No account
+data or tokens were collected.
+
+The acceptance did not pass. Bridge health reported `publisherSeen: true`,
+`stateAvailable: true`, and one widget client, but its redacted state after the
+replacement was `sourceKind: dom`, `lyricsKind: unavailable`, `hasLyrics: false`,
+no current line/index, `playbackStatus: playing`, and `stale: true`. This proves
+that selection/activation of the real DOM source is occurring, but a snapshot is
+not reaching `PluginStateMachine.setLyrics()`. The bridge and widget are
+therefore downstream of the live loss. Do not tag or resume release collateral.
+
+The source-generation regression remains valid: focused plugin and lyrics tests
+passed (28 pass, 0 fail); changed-file Biome format/lint, full typecheck/build,
+and `git diff --check` passed. The remaining failure is an unexplained live
+source callback lifecycle or DOM-read boundary. Escalate to GPT-5.6 Sol High for
+a structural DevTools diagnosis before changing implementation.
