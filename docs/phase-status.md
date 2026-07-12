@@ -619,3 +619,76 @@ logout/login checks require the user to wake and re-enter the Plasma session.
 Resume with the bridge and applet active, perform those two user-present
 cycles, confirm the applet reconnects after each, then close tasks 6.1, 6.6,
 6.7, and the Phase 6 exit criterion if both pass.
+
+Phase 6B preparation resumed later on 2026-07-11 with the user present. The
+worktree was clean and only documentation commits followed `f00ef43`. Applet
+53 connected to a temporary loopback bridge run as the transient user unit
+`klyric-phase6b.service`; `/health` reported one client. Cider 3.1.8 was open
+with its Lyrics view visible, but the bridge reported `publisherSeen: false`
+and no state. The applet therefore retained a prior sanitized Arabic RTL
+fixture in its local display cache instead of receiving a current lyric.
+
+The Cider Extensions > Plugins screen reported both `No running plugins` and
+`No installed plugins`. The current plugin was rebuilt successfully
+(`plugin.js`, 48,968 bytes) and installed at
+`~/.config/sh.cider.genten/plugins/dev.luizpaes.klyric/plugin.js`; after a full
+Cider restart it still did not appear in that UI. The bridge remained healthy
+and had one applet client, but no publisher. This is an unexplained Cider
+plugin-discovery failure affecting `apps/cider-plugin` and Cider's local plugin
+loader, not a suspend/resume failure. Do not attempt an unverified discovery
+format or packaging fix during Phase 6B. Diagnose the expected Cider 3.1.8
+plugin layout/manifest and loading mechanism first, with GPT-5.6 Sol at High
+reasoning; then restore a discoverable, configured plugin before repeating the
+user-present suspend/resume gate.
+
+Diagnosis established the root cause later on 2026-07-11. Cider's installed
+3.1.8/3.1.10 loader serves plugin directories statically but includes a plugin
+in `/plugins/list` only when `<identifier>/plugin.yml` exists. The renderer then
+persists enabled identifiers in `c3api/applied-plugins` and imports
+`/plugins/<identifier>/plugin.js`. The official `ciderapp/plugin-template`
+independently emits the same `plugin.yml` metadata and `entry.plugin.js.type =
+main` layout. KLyric had only `plugin.js`, so Cider correctly omitted it from
+the installed list and never enabled or loaded it.
+
+The current uncommitted fix adds `apps/cider-plugin/plugin.yml`, copies it into
+`dist` during the Bun build, and adds a focused discovery regression test. The
+plugin build, focused test, and `git diff --check` pass. Both build artifacts
+were installed locally, and live Cider `/plugins/list` returned the complete
+KLyric metadata, proving discovery is restored. The user paused work before
+the plugin was enabled and before runtime setup or bridge publication could be
+verified. The temporary bridge was stopped, and no suspend or logout action
+was initiated. Resume by reviewing the uncommitted changes, enabling the
+discovered plugin with redacted loader evidence, confirming publisher health,
+and only then preparing the gated suspend/resume scenario.
+
+A follow-up review on 2026-07-11 confirmed the uncommitted discovery fix is
+correctly scoped: `plugin.yml` supplies the expected identifier and `plugin.js`
+main entry, the package build copies it unchanged into `dist`, the installed
+manifest and entrypoint match those artifacts, and
+`bun test apps/cider-plugin/tests/plugin-discovery.test.ts` passes (1 test).
+A transient loopback bridge started cleanly and reported no publisher before
+plugin setup, then was stopped. Cider was already running without a reachable
+DevTools endpoint; launching it with `--remote-debugging-port=9222` passed the
+flag to that existing process rather than starting a fresh debug-enabled one.
+A safe D-Bus quit request did not close the existing process. No plugin
+enablement, setup, or publication was therefore observed, and no disruptive
+desktop action was performed. The next action is to gracefully close Cider,
+start a fresh DevTools-enabled process, enable KLyric, and repeat the redacted
+bridge-health verification.
+
+On 2026-07-12, the user performed the required real suspend/resume cycle.
+Immediately after the user confirmed resumption, the existing bridge process
+was still running and `/health` reported `publisherSeen: true`, `stateAvailable:
+true`, and one connected widget client. A second probe eight seconds later
+reported the same healthy state. Cider 3.1.8 DevTools remained reachable. The
+post-resume redacted inspection found Cider idle, with no lyric DOM and
+`descriptorId: unsupported`, which is expected when the Lyrics view is not
+open and does not affect bridge/widget recovery. This completes the
+suspend/resume and multiple-widget acceptance scenario (tasks 6.1 and 6.7).
+
+The final outstanding Phase 6 scenario is a full Plasma logout/login. The
+checkpoint now records this result before requesting logout because it will
+terminate the active GUI and Codex session. After logging back in, start a new
+Codex session with the continuation prompt in `AGENTS.md`; verify that the
+running bridge reports the restored KLyric applet as a client, record the
+result, and only then complete task 6.6 and Phase 6.

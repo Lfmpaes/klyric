@@ -1,0 +1,10 @@
+ce_prefix: klyric
+identifier: dev.luizpaes.klyric
+name: KLyric
+description: "Publishes Cider's active synchronized lyric line to KDE Plasma."
+version: 0.1.0
+author: Luiz Paes
+repo: ""
+entry:
+  plugin.js:
+    type: main

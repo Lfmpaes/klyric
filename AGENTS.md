@@ -24,21 +24,21 @@ Read either complete document only when the checkpoint is inconsistent, architec
 Update this section once after a meaningful implementation or validation batch, when a material blocker changes, or when the phase status changes.
 
 - **Current phase:** Phase 6 — Integration hardening
-- **Phase status:** `blocked`
+- **Phase status:** `in_progress`
 - **Current work mode:** Phase 6B — Manual desktop acceptance
-- **Current task:** 6.1 — Execute and document the remaining end-to-end scenarios
-- **Current validation focus:** 6.6/6.7 — Real Plasma logout/login and suspend/resume
+- **Current task:** 6.6 — Verify all restart scenarios
+- **Current validation focus:** Prepare the required full Plasma logout/login scenario and verify applet reconnection after login
 - **Recommended next model:** GPT-5.6 Terra
 - **Reasoning:** Medium
-- **Escalation:** GPT-5.6 Sol — High only if a manual scenario exposes an unexplained cross-component defect
-- **Last completed task:** 6.8 — Test themes, panel orientations, font scaling, DPI scaling, RTL, and long lines
+- **Escalation:** GPT-5.6 Sol — High only if the post-login bridge or applet recovery fails without a known cause
+- **Last completed task:** 6.7 — Verify suspend/resume and multiple widgets
 - **Last verified implementation commit:** `f00ef43` — harden panel layout and WebSocket reconnect
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
-- **Last validation:** All 61 automated tests and required format, lint, typecheck, build, `qmllint`, horizontal `plasmoidviewer`, and diff checks pass. Real `+12`, 150%/200% scaling, Arabic RTL, multiple widgets, PlasmaShell replacement, and bridge stop/start recovery pass. The desktop was restored.
-- **Known blockers:** Cider 3.1.8 requires its Lyrics view open. Suspend/resume requires the user to wake the machine. A full Plasma logout requires the user to log back in and terminates the active GUI session.
-- **Execution gate:** Do not start Phase 6B unless the user confirms they are present, can wake the machine, can log back into Plasma, and accept termination of the current GUI session.
-- **Next exact action:** Verify the worktree is safe, suspend/resume once, then log out and back into Plasma and confirm applet 53 reconnects after both cycles.
-- **Last updated:** 2026-07-11 — All non-disruptive Phase 6 work is complete; two user-presence-required checks remain.
+- **Last validation:** Following a user-performed suspend/resume, the bridge remained healthy and stable (`publisherSeen: true`, `stateAvailable: true`, one widget client) for a second probe eight seconds later. Cider 3.1.8 DevTools remained reachable. The Cider runtime was idle after resume, so the redacted inspection correctly reported no active lyric DOM and descriptor `unsupported`; this did not affect bridge/widget reconnection evidence.
+- **Known blockers:** A full Plasma logout requires the user to log back in and terminates the active GUI/Codex session. Cider 3.1.8 requires its Lyrics view open for live DOM lyrics.
+- **Execution gate:** The user confirmed they are present, can wake the machine, can log back into Plasma, and accept termination of the current GUI session.
+- **Next exact action:** Record the logout-safe checkpoint, then ask the user to log out of Plasma and start the post-login verification session.
+- **Last updated:** 2026-07-12 — Suspend/resume passed; the only remaining Phase 6B scenario is full Plasma logout/login recovery.
 
 Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 
@@ -460,4 +460,3 @@ If both scenarios pass, complete tasks 6.1, 6.6, 6.7 and Phase 6, update both
 status files once, provide the required handoff recommending the appropriate
 model for Phase 7, and stop before starting Phase 7.
 ```
-

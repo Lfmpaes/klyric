@@ -34,7 +34,7 @@ protocol parser used by the plasmoid. It uses sanitized fixture text only.
 | 14 | Play consecutive repeated lyric lines | PASS — automated | Equal text at indexes 0 and 1 produces distinct states. |
 | 15 | Close the Cider lyric view | PASS — known limitation | Playback continued, but all 61 DOM lines disappeared and no public API, store, or timeline source appeared. |
 | 16 | Minimize Cider | PASS — live | With Lyrics left open, playback continued and the active index advanced while minimized. |
-| 17 | Suspend and resume the system | MANUAL — NOT RUN | QML now reconnects immediately when the application becomes active. A real suspend was not triggered because it would disrupt the active user session. |
+| 17 | Suspend and resume the system | PASS — live runtime | The user performed one real suspend/resume cycle. Immediately after waking, the still-running bridge reported `publisherSeen: true`, `stateAvailable: true`, and one connected widget client; a second probe eight seconds later matched. Cider DevTools also remained reachable. |
 | 18 | Rotate the publisher token | PASS — automated | A second token-store instance rotates the file; the running bridge immediately rejects the old token and accepts the new token. |
 | 19 | Change bridge port | PASS — component | Bridge/plugin settings validate the new port, and QML reconnects when its configured port changes. |
 | 20 | Upgrade the widget over an installation | PASS — runtime | `kpackagetool6 --type Plasma/Applet --upgrade apps/plasmoid/package` succeeded and the upgraded widget survived runtime smoke checks. |
@@ -86,8 +86,8 @@ can be reconsidered.
 | Breeze Light | PASS — live runtime | Both orientations remained legible with `BreezeLight`; the user subsequently restored the original Breeze Dark scheme. |
 | Font setting extremes | PASS — live runtime | `fontSizeAdjustment=-6` rendered legibly in both real orientations. After `Text.VerticalFit` was installed, `+12` remained fully bounded in the real 32 px horizontal panel. The setting was restored to zero. |
 | Horizontal `plasmoidviewer` | PASS — runtime smoke | The required command loaded for ten seconds without a QML error after Plasma SDK was installed. |
-| Full Plasma session restart | MANUAL — NOT RUN | Would disrupt the active user session. |
-| Real system suspend/resume | MANUAL — NOT RUN | Would disrupt the active user session. |
+| Real system suspend/resume | PASS — live runtime | One user-performed suspend/resume cycle preserved bridge health and one connected widget client across two post-resume probes. |
+| Full Plasma session restart | MANUAL — NOT RUN | Requires user logout/login and terminates the active GUI development session. |
 
 ## Security, privacy, and resource audit
 
@@ -117,8 +117,6 @@ can be reconsidered.
 
 ## Remaining manual completion checklist
 
-- Suspend and resume the machine with Cider, bridge, and two widget instances
-  active.
-- Restart the Plasma session and confirm both widgets reconnect.
+- Restart the Plasma session and confirm the widget reconnects.
 - The desktop is restored: Breeze Dark, 100% scale, applet 53 font zero, no
   temporary panel or widget, and no temporary bridge.

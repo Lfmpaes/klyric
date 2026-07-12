@@ -7,7 +7,7 @@
     "@klyric/protocol": "workspace:*"
   },
   "scripts": {
-    "build": "bun run typecheck && bun build src/main.ts --outdir dist --entry-naming plugin.js --format esm",
+    "build": "bun run typecheck && bun build src/main.ts --outdir dist --entry-naming plugin.js --format esm && bun -e 'await Bun.write(\"dist/plugin.yml\", Bun.file(\"plugin.yml\"))'",
     "dev": "bun run typecheck",
     "inspect:cider": "bun run scripts/inspect-runtime.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
