@@ -11,8 +11,8 @@ As of 2026-07-11, the workspace has a usable local git repository and the `main`
 | 4 — Cider plugin MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 5 — Plasma widget MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 6 — Integration hardening | complete | GPT-5.6 Terra | Medium | 2026-07-12 |
-| 7 — Packaging and installation | pending | GPT-5.6 Terra | Medium | — |
-| 8 — Release readiness | pending | GPT-5.6 Sol | High | — |
+| 7 — Packaging and installation | complete | GPT-5.6 Terra | Medium | 2026-07-12 |
+| 8 — Release readiness | in_progress | GPT-5.6 Terra | High | — |
 
 ## Phase 0 journal
 
@@ -732,3 +732,34 @@ been executed by GitHub because no release tag has been pushed.
 
 Phase 7 is complete. Phase 8 begins at task 8.1: verify licenses and bundled
 assets. Cider 3.1.8 still requires its Lyrics view open for live DOM lyrics.
+
+## Phase 8 journal
+
+Tasks 8.1 through 8.8 completed on 2026-07-12. The license audit found no
+bundled image, font, SVG, or copied third-party source assets; KDE's named
+theme icon is not redistributed. The project license is now included in both
+installable extension archives. All release version references are `0.1.0`,
+the Cider manifest now names the canonical repository, and routine plugin
+capability logging is disabled in production setup.
+
+The combined archive was corrected to include its own Bun installer,
+uninstaller, package manifest, release notes, and license. A previously hidden
+root `install` lifecycle hook was removed because a clean `bun install` invoked
+it before artifacts existed. The packaging tests now serialize access to the
+shared release directory and prove a tarball extraction can install with clean
+disposable XDG paths.
+
+The installed environment is Cider 3.1.8-1 and Plasma Desktop/Workspace
+6.7.2-1.1. Phase 6 live acceptance remains the Cider evidence; its final
+DevTools probe was unavailable because Cider was not running. Plasma package
+validation with `qmllint`, `kpackagetool6 --show`, and `plasmoidviewer` passed.
+`bun audit` reported no known vulnerabilities. The complete license,
+compatibility, production-behavior, privacy, security, dependency, and archive
+audit is recorded in `docs/release-readiness.md`.
+
+The detached clean worktree at commit `3a26249` passed `bun install
+--frozen-lockfile`, `bun run format`, `bun run lint`, `bun run typecheck`,
+`bun run test` (69 pass, 0 fail), `bun run build`, `bun run package`, both
+SHA-256 manifests, and `git diff --check`. Task 8.9 is partially complete:
+release notes, checksums, and limitations are prepared; one product-focused,
+privacy-safe screenshot remains before the final `v0.1.0` tag.

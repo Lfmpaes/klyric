@@ -24,21 +24,21 @@ Read either complete document only when the checkpoint is inconsistent, architec
 Update this section once after a meaningful implementation or validation batch, when a material blocker changes, or when the phase status changes.
 
 - **Current phase:** Phase 8 — Release readiness
-- **Phase status:** `pending`
-- **Current work mode:** Phase 7 handoff
-- **Current task:** 8.1 — Verify licenses and bundled assets
-- **Current validation focus:** Begin the release-readiness audit from the completed Phase 7 artifacts
+- **Phase status:** `in_progress`
+- **Current work mode:** Phase 8 release audit
+- **Current task:** 8.9 — Prepare screenshots, release notes, checksums, and limitations
+- **Current validation focus:** Capture one privacy-safe, product-focused screenshot before tagging
 - **Recommended next model:** GPT-5.6 Terra
 - **Reasoning:** High
 - **Escalation:** GPT-5.6 Sol — High only for a compatibility, architecture, privacy, security, or unexplained final-acceptance defect
 - **Last completed task:** Phase 7 — Packaging and installation
-- **Last verified implementation commit:** `1f461e5` — add release installation workflow
+- **Last verified implementation commit:** `3a26249` — remove automatic installer lifecycle
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
-- **Last validation:** `bun run format`, `lint`, `typecheck`, `build`, and `package` passed; the unrestricted full suite passed 67 tests. The packaging lifecycle test proved disposable clean install, upgrade token preservation, health checking, uninstall, and `--purge`; archive checksums and systemd unit syntax also passed.
+- **Last validation:** A clean detached worktree at `3a26249` passed `bun install --frozen-lockfile`, `format`, `lint`, `typecheck`, 69 tests, `build`, `package`, both checksum manifests, and `git diff --check`. The archive test extracted the tarball and installed it with disposable XDG paths.
 - **Known blockers:** Cider 3.1.8 requires its Lyrics view open for live DOM lyrics; this remains a documented compatibility limitation.
-- **Execution gate:** Phase 7 is complete. Do not begin Phase 8 work without a new continuation request.
-- **Next exact action:** Audit licenses and bundled assets for task 8.1.
-- **Last updated:** 2026-07-12 — Phase 7 packaging and installation complete at `1f461e5`.
+- **Execution gate:** Await one privacy-safe screenshot selected by the user; do not capture the live desktop without explicit approval.
+- **Next exact action:** Save a cropped KLyric-only screenshot at `docs/screenshots/klyric-v0.1.0.png`.
+- **Last updated:** 2026-07-12 — release audit complete through task 8.8 at `3a26249`; screenshot and tag remain.
 
 Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 
@@ -225,14 +225,14 @@ Rules:
 **Default model:** GPT-5.6 Terra — High  
 **Use Sol High for:** 8.3, 8.4, 8.6, or an unexplained final acceptance failure
 
-- [ ] **8.1** Verify licenses and bundled assets.
-- [ ] **8.2** Finalize versions.
-- [ ] **8.3** Verify current Cider compatibility.
-- [ ] **8.4** Verify current Plasma 6 compatibility.
-- [ ] **8.5** Remove or disable development-only behavior.
-- [ ] **8.6** Complete architecture, privacy, security, and dependency reviews.
-- [ ] **8.7** Run CI and acceptance tests from a clean checkout.
-- [ ] **8.8** Test final artifacts on a clean target.
+- [x] **8.1** Verify licenses and bundled assets.
+- [x] **8.2** Finalize versions.
+- [x] **8.3** Verify current Cider compatibility.
+- [x] **8.4** Verify current Plasma 6 compatibility.
+- [x] **8.5** Remove or disable development-only behavior.
+- [x] **8.6** Complete architecture, privacy, security, and dependency reviews.
+- [x] **8.7** Run CI and acceptance tests from a clean checkout.
+- [x] **8.8** Test final artifacts on a clean target.
 - [ ] **8.9** Prepare screenshots, release notes, checksums, and limitations.
 - [ ] **8.10** Tag and prepare `v0.1.0` after all criteria pass.
 - [ ] **Phase 8 complete** — Do not begin future-work features.
