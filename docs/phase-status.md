@@ -12,7 +12,7 @@ As of 2026-07-11, the workspace has a usable local git repository and the `main`
 | 5 — Plasma widget MVP | complete | GPT-5.6 Terra | High | 2026-07-11 |
 | 6 — Integration hardening | complete | GPT-5.6 Terra | Medium | 2026-07-12 |
 | 7 — Packaging and installation | complete | GPT-5.6 Terra | Medium | 2026-07-12 |
-| 8 — Release readiness | in_progress | GPT-5.6 Terra | High | — |
+| 8 — Release readiness | complete | GPT-5.6 Terra | High | 2026-07-12 |
 
 ## Phase 0 journal
 
@@ -733,7 +733,17 @@ been executed by GitHub because no release tag has been pushed.
 Phase 7 is complete. Phase 8 begins at task 8.1: verify licenses and bundled
 assets. Cider 3.1.8 still requires its Lyrics view open for live DOM lyrics.
 
-## Phase 8 journal
+Phase 8 is complete as of 2026-07-12. The final Cider discovery, lifecycle, and
+filtered-index fixes are committed in `27887a0`; release validation and checkpoint
+updates are recorded in `d45cecc`. The local annotated tag `v0.1.0` was created
+with explicit user authorization and was not pushed.
+
+Release collateral includes the privacy-safe screenshot, release notes,
+installation guide, integration matrix, checksums, and self-contained release
+archive. Final validation passed: full test suite (82 pass, 0 fail), typecheck,
+build, package creation, changed-file checks, and diff check. No future-work
+features should be started in this phase.
+
 
 Tasks 8.1 through 8.8 completed on 2026-07-12. The license audit found no
 bundled image, font, SVG, or copied third-party source assets; KDE's named

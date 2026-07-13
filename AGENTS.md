@@ -29,14 +29,14 @@ Read either complete document only when the checkpoint is inconsistent, architec
 Update this section once after a meaningful implementation or validation batch, when a material blocker changes, or when the phase status changes.
 
 - **Current phase:** Phase 8 — Release readiness
-- **Phase status:** `in_progress`
-- **Current work mode:** Phase 8 release readiness resumed after fixing and live-validating continuous lyric updates
-- **Current task:** Prepare Phase 8.9 release collateral; do not tag without explicit authorization
-- **Current validation focus:** Preserve validated Cider audio, continuous DOM lyric, bridge, and widget behavior while finalizing release materials
+- **Phase status:** `complete`
+- **Current work mode:** Phase 8 release readiness completed after final lyric correctness fix and release validation
+- **Current task:** No implementation task remains; do not begin future-work features
+- **Current validation focus:** Preserve the tagged v0.1.0 release state; any publication requires separate authorization
 - **Recommended next model:** GPT-5.6 Luna
 - **Reasoning:** Low
-- **Escalation:** None — implementation and focused regression behavior are verified
-- **Last completed task:** Committed live lyric discovery, receiver-safe browser callbacks, active-source lifecycle guards, and filtered DOM index correction as `27887a0`
+- **Escalation:** None
+- **Last completed task:** Prepared release collateral, passed the full release validation suite, committed the final fixes, and created local tag `v0.1.0`
 - **Last verified implementation commit:** `27887a0` — stabilize live lyric discovery and indexing
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
 - **Last validation:** The root failures were all receiver/ownership related. In Cider, browser `setTimeout` and `queueMicrotask` functions copied to environment objects did not deliver when called as methods. Receiver-safe lexical wrappers now cover discovery timers, retry timers, and DOM mutation microtasks. The plugin also stops retry/discovery selection while a source is active and guards already-retained callbacks, preventing generation churn that invalidated later snapshots. Focused lyric/plugin tests passed (34 pass, 0 fail), changed-file Biome check, full typecheck/build, full test suite (82 pass, 0 fail), package build, and `git diff --check` passed. The installed bundle hash matched the build. Live playback with “Ritual” produced stable source generation and bridge protocol v1 `line-synced`, `hasLyrics: true`, present current line/index, and `stale: false`; consecutive indices advanced 3 → 5 → 6 → 8 while the user confirmed the widget lyrics updated correctly. A stale Electron audio session initially exposed no Cider PipeWire stream; after a clean restart and user reauthorization, Cider used the intact original profile, created an unmuted PipeWire output stream, and the user confirmed audio worked. No profile data was deleted. Account/token values were never read or recorded.
@@ -238,9 +238,9 @@ Rules:
 - [x] **8.6** Complete architecture, privacy, security, and dependency reviews.
 - [x] **8.7** Run CI and acceptance tests from a clean checkout.
 - [x] **8.8** Test final artifacts on a clean target.
-- [ ] **8.9** Prepare screenshots, release notes, checksums, and limitations. **BLOCKED — release-blocking lyric display failure requires correction and renewed acceptance evidence before collateral can be finalized.**
-- [ ] **8.10** Tag and prepare `v0.1.0` after all criteria pass.
-- [ ] **Phase 8 complete** — Do not begin future-work features.
+- [x] **8.9** Prepare screenshots, release notes, checksums, and limitations.
+- [x] **8.10** Tag and prepare `v0.1.0` after all criteria pass.
+- [x] **Phase 8 complete** — Do not begin future-work features.
 
 ---
 
