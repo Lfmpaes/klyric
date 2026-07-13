@@ -143,9 +143,9 @@ function state(value) {
             return null
         result.positionMs = value.positionMs
     }
-    var optionalBooleans = ["trackHasLyrics", "lyricsPanelOpen"]
-    for (var i = 0; i < optionalBooleans.length; i++) {
-        var key = optionalBooleans[i]
+    var optionalBooleanKeys = ["trackHasLyrics", "lyricsPanelOpen"]
+    for (var i = 0; i < optionalBooleanKeys.length; i++) {
+        var key = optionalBooleanKeys[i]
         if (value[key] !== undefined) {
             if (typeof value[key] !== "boolean")
                 return null

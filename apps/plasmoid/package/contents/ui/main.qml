@@ -10,7 +10,8 @@ PlasmoidItem {
 
     property string connectionState: "disconnected"
     property var lyricState: null
-    property string displayText: ""
+    property var displayResult: ({ text: "", isLyric: false })
+    property string displayText: displayResult.text
     property bool protocolCompatible: true
     property int reconnectAttempt: 0
     property double lastMessageAt: 0
@@ -32,7 +33,7 @@ PlasmoidItem {
     readonly property bool showTextInCompact: !verticalPanel || configuration.verticalTextEnabled
 
     function updateDisplayText() {
-        displayText = Formatting.fallbackText(lyricState, configuration, connectionState)
+        displayResult = Formatting.displayResult(lyricState, configuration, connectionState)
     }
 
     function isLoopbackHost(host) {
@@ -138,7 +139,7 @@ PlasmoidItem {
         displayText: root.displayText
         connectionState: root.connectionState
         showText: root.showTextInCompact
-        showMusicIcon: root.configuration.showMusicIcon
+        displayIsLyric: root.displayResult.isLyric
         showConnectionBadge: root.configuration.showConnectionStatus || root.configuration.showConnectionBadge
         maximumWidth: root.configuration.maximumWidth
         minimumWidth: root.configuration.minimumWidth
@@ -160,25 +161,19 @@ PlasmoidItem {
         lastMessageAt: root.lastMessageAt
         showPreviousLine: root.configuration.showPreviousLine
         showNextLine: root.configuration.showNextLine
-        showActiveSource: root.configuration.showActiveSource
-        showLastUpdateAge: root.configuration.showLastUpdateAge
-        tooltipDetailsEnabled: root.configuration.tooltipDetailsEnabled
+        displayIsLyric: root.displayResult.isLyric
     }
 
     readonly property string tooltipText: {
-        if (!configuration.tooltipDetailsEnabled)
-            return displayText
-        var detail = displayText
         if (lyricState && lyricState.track && lyricState.track.title) {
-            detail += "\n" + lyricState.track.title
-            if (lyricState.track.artist)
-                detail += " — " + lyricState.track.artist
+            var track = lyricState.track
+            return track.artist ? track.title + " - " + track.artist : track.title
         }
-        return detail + "\n" + Formatting.connectionText(connectionState)
+        return displayText
     }
 
-    toolTipMainText: displayText
-    toolTipSubText: configuration.tooltipDetailsEnabled ? Formatting.connectionText(connectionState) : ""
+    toolTipMainText: tooltipText
+    toolTipSubText: ""
 
     Timer {
         id: reconnectTimer

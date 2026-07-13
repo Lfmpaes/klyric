@@ -92,12 +92,6 @@ Kirigami.FormLayout {
     }
 
     CheckBox {
-        text: i18n("Show music icon")
-        checked: plasmoid.configuration.showMusicIcon
-        onToggled: plasmoid.configuration.showMusicIcon = checked
-    }
-
-    CheckBox {
         text: i18n("Show title and artist when lyrics are unavailable")
         checked: plasmoid.configuration.showTrackFallback
         onToggled: plasmoid.configuration.showTrackFallback = checked
@@ -125,12 +119,6 @@ Kirigami.FormLayout {
         text: i18n("Use subtle text transitions")
         checked: plasmoid.configuration.animationsEnabled
         onToggled: plasmoid.configuration.animationsEnabled = checked
-    }
-
-    CheckBox {
-        text: i18n("Include details in tooltips")
-        checked: plasmoid.configuration.tooltipDetailsEnabled
-        onToggled: plasmoid.configuration.tooltipDetailsEnabled = checked
     }
 
     CheckBox {
@@ -179,17 +167,5 @@ Kirigami.FormLayout {
         text: i18n("Show connection badge")
         checked: plasmoid.configuration.showConnectionBadge
         onToggled: plasmoid.configuration.showConnectionBadge = checked
-    }
-
-    CheckBox {
-        text: i18n("Show active lyric source in the popup")
-        checked: plasmoid.configuration.showActiveSource
-        onToggled: plasmoid.configuration.showActiveSource = checked
-    }
-
-    CheckBox {
-        text: i18n("Show last update age in the popup")
-        checked: plasmoid.configuration.showLastUpdateAge
-        onToggled: plasmoid.configuration.showLastUpdateAge = checked
     }
 }

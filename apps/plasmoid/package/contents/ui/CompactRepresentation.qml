@@ -10,7 +10,7 @@ Item {
     property string tooltipText: ""
     property string connectionState: "disconnected"
     property bool showText: true
-    property bool showMusicIcon: true
+    property bool displayIsLyric: false
     property bool showConnectionBadge: false
     property int maximumWidth: 360
     property int minimumWidth: 100
@@ -21,6 +21,7 @@ Item {
     property bool animationsEnabled: true
     property bool verticalPanel: false
 
+    readonly property bool iconVisible: true
     readonly property int iconOnlyWidth: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing * 2
     readonly property int effectiveMaximumWidth: Math.max(Kirigami.Units.gridUnit * 8, maximumWidth)
     readonly property int effectiveMinimumWidth: Math.min(effectiveMaximumWidth, Math.max(iconOnlyWidth, minimumWidth))
@@ -72,14 +73,14 @@ Item {
         anchors.fill: parent
         anchors.margins: Kirigami.Units.smallSpacing
         spacing: Kirigami.Units.smallSpacing
-        layoutDirection: Qt.application.layoutDirection
+        layoutDirection: compact.alignment === "right" ? Qt.RightToLeft : Qt.application.layoutDirection
 
         Kirigami.Icon {
-            visible: compact.showMusicIcon || !compact.showText
+            visible: compact.iconVisible
             source: "view-media-lyrics"
             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignVCenter | (compact.alignment === "right" ? Qt.AlignRight : compact.alignment === "center" ? Qt.AlignHCenter : Qt.AlignLeft)
         }
 
         PlasmaComponents.Label {
@@ -99,6 +100,7 @@ Item {
             fontSizeMode: Text.VerticalFit
             minimumPixelSize: 1
             font.weight: compact.fontWeight === "bold" ? Font.Bold : compact.fontWeight === "medium" ? Font.Medium : Font.Normal
+            font.italic: !compact.displayIsLyric
             Accessible.name: compact.displayText
         }
 
@@ -122,7 +124,7 @@ Item {
 
         Kirigami.Icon {
             id: verticalIcon
-            visible: compact.showMusicIcon || !compact.showText
+            visible: compact.iconVisible
             source: "view-media-lyrics"
             width: Kirigami.Units.iconSizes.smallMedium
             height: Kirigami.Units.iconSizes.smallMedium
@@ -156,6 +158,7 @@ Item {
                 fontSizeMode: Text.VerticalFit
                 minimumPixelSize: 1
                 font.weight: compact.fontWeight === "bold" ? Font.Bold : compact.fontWeight === "medium" ? Font.Medium : Font.Normal
+                font.italic: !compact.displayIsLyric
                 Accessible.name: compact.displayText
             }
         }

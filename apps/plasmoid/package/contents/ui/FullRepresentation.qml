@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
-import "js/Formatting.js" as Formatting
 
 Item {
     id: popup
@@ -15,12 +14,16 @@ Item {
     property double lastMessageAt: 0
     property bool showPreviousLine: true
     property bool showNextLine: true
+    property bool displayIsLyric: false
     property bool showActiveSource: false
     property bool showLastUpdateAge: false
     property bool tooltipDetailsEnabled: true
 
+    readonly property int lyricLineCount: 1 + (showPreviousLine ? 1 : 0) + (showNextLine ? 1 : 0)
+    readonly property int lyricLineHeight: Math.ceil(Kirigami.Theme.defaultFont.pixelSize * 1.5)
+
     implicitWidth: Kirigami.Units.gridUnit * 28
-    implicitHeight: content.implicitHeight + Kirigami.Units.largeSpacing * 2
+    implicitHeight: lyricLineCount * lyricLineHeight + Kirigami.Units.largeSpacing * 2
     Accessible.name: i18n("KLyric details")
 
     ColumnLayout {
@@ -31,31 +34,22 @@ Item {
 
         PlasmaComponents.Label {
             Layout.fillWidth: true
-            visible: popup.lyricState && popup.lyricState.track && (popup.lyricState.track.title || popup.lyricState.track.artist)
-            text: {
-                if (!popup.lyricState || !popup.lyricState.track)
-                    return ""
-                var track = popup.lyricState.track
-                return track.title && track.artist ? track.title + " — " + track.artist : (track.title || track.artist || "")
-            }
-            font.bold: true
-            elide: Text.ElideRight
-            wrapMode: Text.Wrap
-        }
-
-        PlasmaComponents.Label {
-            Layout.fillWidth: true
             visible: popup.showPreviousLine && popup.lyricState && popup.lyricState.previousLine
             text: popup.lyricState && popup.lyricState.previousLine ? popup.lyricState.previousLine.text : ""
             opacity: 0.65
-            wrapMode: Text.Wrap
+            elide: Text.ElideRight
+            maximumLineCount: 1
+            wrapMode: Text.NoWrap
         }
 
         PlasmaComponents.Label {
             Layout.fillWidth: true
             text: popup.displayText
-            font.bold: true
-            wrapMode: Text.Wrap
+            font.bold: popup.displayIsLyric
+            font.italic: !popup.displayIsLyric
+            elide: Text.ElideRight
+            maximumLineCount: 1
+            wrapMode: Text.NoWrap
             Accessible.name: i18n("Current lyric: %1", popup.displayText)
         }
 
@@ -64,28 +58,9 @@ Item {
             visible: popup.showNextLine && popup.lyricState && popup.lyricState.nextLine
             text: popup.lyricState && popup.lyricState.nextLine ? popup.lyricState.nextLine.text : ""
             opacity: 0.65
-            wrapMode: Text.Wrap
-        }
-
-        PlasmaComponents.Label {
-            Layout.fillWidth: true
-            text: popup.bridgeError.length > 0 ? popup.bridgeError : Formatting.connectionText(popup.connectionState)
-            color: popup.connectionState === "connected" ? Kirigami.Theme.disabledTextColor : Kirigami.Theme.negativeTextColor
-            wrapMode: Text.Wrap
-        }
-
-        PlasmaComponents.Label {
-            Layout.fillWidth: true
-            visible: popup.showActiveSource && popup.lyricState
-            text: i18n("Source: %1", popup.lyricState ? popup.lyricState.sourceKind : "")
-            opacity: 0.7
-        }
-
-        PlasmaComponents.Label {
-            Layout.fillWidth: true
-            visible: popup.showLastUpdateAge
-            text: Formatting.ageText(popup.lastMessageAt)
-            opacity: 0.7
+            elide: Text.ElideRight
+            maximumLineCount: 1
+            wrapMode: Text.NoWrap
         }
     }
 }

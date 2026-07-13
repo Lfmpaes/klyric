@@ -12,6 +12,11 @@ interface ProtocolLibrary {
 }
 
 interface FormattingLibrary {
+  displayResult(
+    state: Record<string, unknown> | null,
+    configuration: Record<string, unknown>,
+    connectionState: string,
+  ): { text: string; isLyric: boolean };
   fallbackText(
     state: Record<string, unknown> | null,
     configuration: Record<string, unknown>,
@@ -38,7 +43,7 @@ function loadFormattingLibrary(): FormattingLibrary {
   const createLibrary = new Function(
     "i18n",
     "i18np",
-    `${source}\nreturn { fallbackText: fallbackText };`,
+    `${source}\nreturn { displayResult: displayResult, fallbackText: fallbackText };`,
   ) as (
     i18n: (value: string) => string,
     i18np: (singular: string, plural: string, count: number) => string,
@@ -108,6 +113,26 @@ test("the QML protocol helper rejects malformed messages and identifies incompat
     ),
   ).toBeNull();
   expect(
+    protocol.parseServerMessage(
+      JSON.stringify({
+        type: "state",
+        payload: {
+          ...validStateFixture,
+          trackHasLyrics: false,
+          lyricsPanelOpen: true,
+        },
+      }),
+    )?.payload,
+  ).toMatchObject({ trackHasLyrics: false, lyricsPanelOpen: true });
+  expect(
+    protocol.parseServerMessage(
+      JSON.stringify({
+        type: "state",
+        payload: { ...validStateFixture, trackHasLyrics: "yes" },
+      }),
+    ),
+  ).toBeNull();
+  expect(
     protocol.parseServerMessage(JSON.stringify({ type: "future-message" })),
   ).toEqual({ type: "unknown" });
 });
@@ -126,7 +151,7 @@ test("the QML protocol helper accepts Unicode lines within the shared limit", ()
   ).toBe("state");
 });
 
-test("the QML formatting helper follows the configured fallback priority", () => {
+test("the QML formatting helper distinguishes lyrics from fallback states", () => {
   const formatting = loadFormattingLibrary();
   const configuration = {
     instrumentalText: "Instrumental",
@@ -136,22 +161,29 @@ test("the QML formatting helper follows the configured fallback priority", () =>
   };
 
   expect(
-    formatting.fallbackText(validStateFixture, configuration, "connected"),
-  ).toBe("Current fixture line");
+    formatting.displayResult(validStateFixture, configuration, "connected"),
+  ).toEqual({ text: "Current fixture line", isLyric: true });
   expect(
-    formatting.fallbackText(
-      { ...validStateFixture, lyricsKind: "instrumental", currentLine: null },
+    formatting.displayResult(
+      { ...validStateFixture, currentLine: null, playbackStatus: "playing" },
       configuration,
       "connected",
     ),
-  ).toBe("Instrumental");
+  ).toEqual({ text: "…", isLyric: false });
   expect(
-    formatting.fallbackText(
+    formatting.displayResult(
+      { ...validStateFixture, currentLine: null, trackHasLyrics: false },
+      configuration,
+      "connected",
+    ),
+  ).toEqual({ text: "Lyrics unavailable", isLyric: false });
+  expect(
+    formatting.displayResult(
       { ...validStateFixture, playbackStatus: "paused" },
       { ...configuration, pausedBehavior: "track-fallback" },
       "connected",
     ),
-  ).toBe("Fixture title — Fixture artist");
+  ).toEqual({ text: "Fixture title — Fixture artist", isLyric: false });
   expect(formatting.fallbackText(null, configuration, "disconnected")).toBe(
     "KLyric bridge unavailable",
   );
@@ -180,7 +212,15 @@ test("the Plasma runtime wires settings and translations through supported conte
     /status === WebSocket\.Closed[\s\S]*socket\.active = false[\s\S]*root\.scheduleReconnect\(\)/,
   );
   expect(mainQml).toContain("verticalPanel: root.verticalPanel");
+  expect(mainQml).toContain("displayResult = Formatting.displayResult");
+  expect(mainQml).toContain(
+    'return track.artist ? track.title + " - " + track.artist : track.title',
+  );
+  expect(mainQml).toContain("toolTipMainText: tooltipText");
+  expect(mainQml).not.toContain("tooltipDetailsEnabled");
   expect(formattingJs).not.toContain(".pragma library");
+  expect(fullRepresentationQml).toContain("maximumLineCount: 1");
+  expect(fullRepresentationQml).toContain("font.italic: !popup.displayIsLyric");
   expect(fullRepresentationQml).not.toContain("Kirigami.Theme.headingFont");
 });
 
@@ -193,7 +233,12 @@ test("the compact representation allocates panel-axis length for opt-in vertical
     "utf8",
   );
 
-  expect(compactQml).toContain("property bool verticalPanel: false");
+  expect(compactQml).toContain("property bool displayIsLyric: false");
+  expect(compactQml).toContain("readonly property bool iconVisible: true");
+  expect(compactQml).toContain("font.italic: !compact.displayIsLyric");
+  expect(compactQml).toContain(
+    'layoutDirection: compact.alignment === "right" ? Qt.RightToLeft',
+  );
   expect(compactQml).toContain(
     "Layout.preferredHeight: verticalPanel ? preferredPanelLength : implicitHeight",
   );
