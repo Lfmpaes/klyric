@@ -776,9 +776,9 @@ aligned. A focused regression test covers an empty row before the active line.
 
 Validation passed: focused lyric/plugin tests (34 pass, 0 fail), changed-file
 Biome check, typecheck, build, and `git diff --check`. This was a real correctness
-issue and is no longer a release blocker; the fix remains uncommitted pending
-explicit commit authorization. Screenshot/release collateral and tagging remain
-separate gated work.
+issue and is no longer a release blocker. The fix was committed in `27887a0`
+(`fix(cider): stabilize live lyric discovery and indexing`). Screenshot/release
+collateral and tagging remain separate gated work.
 
 
 A live report against Cider 3.1.8-1 found an open synchronized Lyrics view with
