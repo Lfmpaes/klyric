@@ -44,7 +44,7 @@ PlasmoidItem {
             type: "hello",
             protocolVersion: Protocol.PROTOCOL_VERSION,
             client: "plasmoid",
-            clientVersion: "0.1.0"
+            clientVersion: "0.1.1"
         }))
     }
 

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   package:
@@ -20,12 +20,32 @@ jobs:
       - run: bun run test
       - run: bun run build
       - run: bun run package
+      - name: Resolve and verify version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(bun -p 'require("./package.json").version')"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "v$VERSION" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not match package version v$VERSION" >&2
+            exit 1
+          fi
       - run: sha256sum --check SHA256SUMS
         working-directory: dist/release
       - run: sha256sum --check SHA256SUMS
-        working-directory: dist/release/klyric-0.1.0
+        working-directory: dist/release/klyric-${{ steps.version.outputs.version }}
       - uses: actions/upload-artifact@v4
         with:
           name: klyric-release
           path: dist/release/
           if-no-files-found: error
+      - name: Publish GitHub release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME"
+          "dist/release/klyric-${{ steps.version.outputs.version }}.tar.gz"
+          dist/release/SHA256SUMS
+          --title "KLyric $GITHUB_REF_NAME"
+          --notes-file RELEASE_NOTES.md

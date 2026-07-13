@@ -1,5 +1,5 @@
 pkgname=klyric
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc="Cider synchronized lyric line widget for KDE Plasma 6"
 arch=('x86_64')

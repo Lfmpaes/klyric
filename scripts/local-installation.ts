@@ -13,8 +13,10 @@ export interface LocalPaths {
   readonly binHome: string;
   readonly bridge: string;
   readonly ciderPlugin: string;
+  readonly cli: string;
   readonly configHome: string;
   readonly dataHome: string;
+  readonly managedRoot: string;
   readonly plasmoid: string;
   readonly service: string;
 }
@@ -27,12 +29,15 @@ export function localPaths(environment = process.env): LocalPaths {
   const ciderHome =
     environment.KLYRIC_CIDER_PLUGIN_HOME ??
     join(configHome, "sh.cider.genten", "plugins");
+  const managedRoot = join(dataHome, "klyric", "installer");
   return {
     binHome,
     bridge: join(binHome, "klyric-bridge"),
     ciderPlugin: join(ciderHome, PLASMOID_ID),
+    cli: join(binHome, "klyric"),
     configHome,
     dataHome,
+    managedRoot,
     plasmoid: join(dataHome, "plasma", "plasmoids", PLASMOID_ID),
     service: join(configHome, "systemd", "user", "klyric-bridge.service"),
   };
@@ -80,6 +85,13 @@ export async function installLocal(options: InstallOptions): Promise<void> {
   const required = [
     "klyric-bridge",
     "klyric-bridge.service",
+    "install.sh",
+    "package.json",
+    "scripts/klyric.ts",
+    "scripts/local-installation.ts",
+    "scripts/release-download.ts",
+    "scripts/release-utils.ts",
+    "scripts/verify-environment.ts",
     `klyric-cider-plugin-${RELEASE_VERSION}.zip`,
     `klyric-plasmoid-${RELEASE_VERSION}.plasmoid`,
   ];
@@ -110,6 +122,21 @@ export async function installLocal(options: InstallOptions): Promise<void> {
 
   await copyFile(join(options.source, "klyric-bridge"), paths.bridge);
   await chmod(paths.bridge, 0o755);
+  await rm(paths.managedRoot, { force: true, recursive: true });
+  await mkdir(paths.managedRoot, { recursive: true });
+  await cp(join(options.source, "scripts"), join(paths.managedRoot, "scripts"), {
+    recursive: true,
+  });
+  await copyFile(
+    join(options.source, "package.json"),
+    join(paths.managedRoot, "package.json"),
+  );
+  await copyFile(join(options.source, "install.sh"), join(paths.managedRoot, "install.sh"));
+  await Bun.write(
+    paths.cli,
+    `#!/bin/sh\nexec bun "${join(paths.managedRoot, "scripts", "klyric.ts")}" "$@"\n`,
+  );
+  await chmod(paths.cli, 0o755);
   const unit = (
     await Bun.file(join(options.source, "klyric-bridge.service")).text()
   ).replace("%h/.local/bin/klyric-bridge", paths.bridge);
@@ -195,6 +222,8 @@ export async function uninstallLocal(purge: boolean): Promise<void> {
   ]);
   await rm(paths.bridge, { force: true });
   await rm(paths.ciderPlugin, { force: true, recursive: true });
+  await rm(paths.cli, { force: true });
+  await rm(paths.managedRoot, { force: true, recursive: true });
   if (purge)
     await rm(join(paths.configHome, "klyric"), {
       force: true,

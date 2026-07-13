@@ -59,7 +59,9 @@ const releaseScripts = join(staging, "scripts");
 await recreateDirectory(releaseScripts);
 for (const filename of [
   "install-local.ts",
+  "klyric.ts",
   "local-installation.ts",
+  "release-download.ts",
   "release-utils.ts",
   "uninstall-local.ts",
   "verify-environment.ts",
@@ -69,7 +71,7 @@ for (const filename of [
     join(releaseScripts, filename),
   );
 }
-for (const filename of ["LICENSE", "README.md", "RELEASE_NOTES.md"]) {
+for (const filename of ["install.sh", "LICENSE", "README.md", "RELEASE_NOTES.md"]) {
   await copyFile(join(root, filename), join(staging, filename));
 }
 await Bun.write(

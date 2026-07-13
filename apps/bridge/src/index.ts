@@ -3,7 +3,7 @@ import { resolveBridgeConfig } from "./config";
 import { logger } from "./logging/logger";
 import { startBridge } from "./server";
 
-const BRIDGE_VERSION = "0.1.0";
+const BRIDGE_VERSION = "0.1.1";
 
 interface CliArguments {
   readonly command: "serve" | "token-show" | "token-rotate";

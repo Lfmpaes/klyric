@@ -11,6 +11,8 @@ import {
   verifyBridgeHealth,
 } from "../scripts/local-installation";
 
+const VERSION = (await Bun.file("package.json").json()).version as string;
+
 let releaseQueue: Promise<void> = Promise.resolve();
 
 function withReleaseLock<T>(operation: () => Promise<T>): Promise<T> {
@@ -32,6 +34,8 @@ test("installer resolves XDG destinations without touching user settings", () =>
   });
 
   expect(paths.bridge).toBe("/tmp/bin/klyric-bridge");
+  expect(paths.cli).toBe("/tmp/bin/klyric");
+  expect(paths.managedRoot).toBe("/tmp/data/klyric/installer");
   expect(paths.service).toBe("/tmp/config/systemd/user/klyric-bridge.service");
   expect(paths.ciderPlugin).toBe("/tmp/cider/plugins/dev.luizpaes.klyric");
   expect(paths.plasmoid).toBe("/tmp/data/plasma/plasmoids/dev.luizpaes.klyric");
@@ -79,6 +83,10 @@ test(
         const paths = localPaths();
         await installLocal({ dryRun: false, source: defaultReleaseSource() });
         expect(await Bun.file(paths.bridge).exists()).toBe(true);
+        expect(await Bun.file(paths.cli).exists()).toBe(true);
+        expect(
+          await Bun.file(join(paths.managedRoot, "scripts", "klyric.ts")).exists(),
+        ).toBe(true);
         expect(
           await Bun.file(join(paths.ciderPlugin, "plugin.js")).exists(),
         ).toBe(true);
@@ -92,6 +100,8 @@ test(
         );
         await uninstallLocal(false);
         expect(await Bun.file(paths.bridge).exists()).toBe(false);
+        expect(await Bun.file(paths.cli).exists()).toBe(false);
+        expect(await Bun.file(paths.managedRoot).exists()).toBe(false);
         expect(await Bun.file(tokenPath).exists()).toBe(true);
         await uninstallLocal(true);
         expect(await Bun.file(join(paths.configHome, "klyric")).exists()).toBe(
@@ -133,7 +143,7 @@ test(
         [
           "unzip",
           "-p",
-          join(release, "klyric-cider-plugin-0.1.0.zip"),
+          join(release, `klyric-cider-plugin-${VERSION}.zip`),
           "LICENSE",
         ],
         { stdout: "pipe" },
@@ -142,7 +152,7 @@ test(
         [
           "unzip",
           "-p",
-          join(release, "klyric-plasmoid-0.1.0.plasmoid"),
+          join(release, `klyric-plasmoid-${VERSION}.plasmoid`),
           "LICENSE",
         ],
         { stdout: "pipe" },
@@ -162,7 +172,7 @@ test(
       await run(["bun", "run", "package"]);
       const root = join("/tmp", `klyric-release-test-${crypto.randomUUID()}`);
       const shim = join(root, "bin");
-      const releaseRoot = join(root, "klyric-0.1.0");
+      const releaseRoot = join(root, `klyric-${VERSION}`);
       await mkdir(shim, { recursive: true });
       for (const command of ["systemctl", "kpackagetool6"]) {
         const path = join(shim, command);
@@ -175,7 +185,7 @@ test(
           "-C",
           root,
           "-xzf",
-          join(process.cwd(), "dist/release/klyric-0.1.0.tar.gz"),
+          join(process.cwd(), `dist/release/klyric-${VERSION}.tar.gz`),
         ]);
         const installed = Bun.spawn(
           [process.execPath, "run", "install:local", "--source", "."],
