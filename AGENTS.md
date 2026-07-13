@@ -4,6 +4,11 @@
 
 KLyric displays Cider’s active synchronized lyric line in a KDE Plasma 6 widget.
 
+For live playback validation, use these tracks from the user's Apple Music library:
+
+- **“Ritual” by The Warning** — synchronized lyrics available.
+- **“Play” by Dave Grohl** — no lyrics available.
+
 ## Source of truth
 
 Before changing code, read:
@@ -25,20 +30,20 @@ Update this section once after a meaningful implementation or validation batch, 
 
 - **Current phase:** Phase 8 — Release readiness
 - **Phase status:** `in_progress`
-- **Current work mode:** Phase 8 release blocked by an unexplained live post-track-change state loss
-- **Current task:** Diagnose the live DOM-source-to-state-machine loss after a track replacement
-- **Current validation focus:** Explain why a live active DOM source reaches `sourceKind: dom` while normalized lyrics remain unavailable after the validated source-generation fix
-- **Recommended next model:** GPT-5.6 Sol
-- **Reasoning:** High
-- **Escalation:** Active — the known source-generation defect is fixed, but live acceptance still loses lyrics upstream of bridge/widget delivery
-- **Last completed task:** Ran the authorized DevTools-enabled live track-change acceptance and reproduced the remaining state loss
-- **Last verified implementation commit:** `0204d5c` — preserve DOM snapshots across track changes
+- **Current work mode:** Phase 8 release readiness resumed after fixing and live-validating continuous lyric updates
+- **Current task:** Review the final DOM indexing fix and release collateral before any explicit tag authorization
+- **Current validation focus:** Preserve the now-passing Cider audio, continuous DOM lyric, bridge, and widget behavior while preparing the release commit boundary
+- **Recommended next model:** GPT-5.6 Luna
+- **Reasoning:** Medium
+- **Escalation:** None — implementation and focused regression behavior are verified
+- **Last completed task:** Fixed browser receiver loss for discovery timers, retry timers, and DOM microtasks; prevented active-source restart loops; fixed filtered DOM indexes; restored Cider authorization/audio; live-validated continuous widget updates
+- **Last verified implementation commit:** `0204d5c` — current observer, timer, microtask, active-source, and filtered-index fixes are uncommitted
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
-- **Last validation:** DevTools-enabled Cider 3.1.8 started and played synchronized content with Lyrics open. A programmatic track change reported `changed: true`, `playing: true`, 61 DOM lines, and active index 0. Bridge health reported `publisherSeen: true`, `stateAvailable: true`, and one widget client, but its redacted state was `sourceKind: dom`, `lyricsKind: unavailable`, `hasLyrics: false`, no current line/index, `playbackStatus: playing`, and `stale: true`. The same unavailable state was present before the change while Lyrics had not yet rendered. Focused plugin/lyrics tests passed (28 pass, 0 fail); changed-file Biome format/lint, full typecheck/build, and diff check passed. No account data or tokens were collected.
-- **Known blockers:** RELEASE BLOCKER — source-generation ownership accepts the replacement source in regression tests, but the real DOM source is active after track change while no lyric snapshot reaches the state machine. Bridge and widget are downstream of the reproduced loss. The broad filtered-index inconsistency remains a separate issue. Do not commit release collateral or create `v0.1.0`.
-- **Execution gate:** Do not tag or release until Sol identifies the live source-to-state loss, a focused fix passes, and the privacy-safe live track-change scenario proves a protocol-valid rendered current line.
-- **Next exact action:** With Sol High, use DevTools to inspect the active `DomLyricsSource` lifecycle and its snapshot/error callback delivery across the track change, then isolate the loss boundary without touching account data or tokens.
-- **Last updated:** 2026-07-12 — authorized DevTools live validation reproduced unavailable lyrics despite an active DOM source after track replacement; Sol diagnosis is required.
+- **Last validation:** The root failures were all receiver/ownership related. In Cider, browser `setTimeout` and `queueMicrotask` functions copied to environment objects did not deliver when called as methods. Receiver-safe lexical wrappers now cover discovery timers, retry timers, and DOM mutation microtasks. The plugin also stops retry/discovery selection while a source is active and guards already-retained callbacks, preventing generation churn that invalidated later snapshots. Focused lyric/plugin tests passed (33 pass, 0 fail), changed-file Biome check, full typecheck/build, and `git diff --check` passed. The installed bundle hash matched the build. Live playback with “Ritual” produced stable source generation and bridge protocol v1 `line-synced`, `hasLyrics: true`, present current line/index, and `stale: false`; consecutive indices advanced 3 → 5 → 6 → 8 while the user confirmed the widget lyrics updated correctly. A stale Electron audio session initially exposed no Cider PipeWire stream; after a clean restart and user reauthorization, Cider used the intact original profile, created an unmuted PipeWire output stream, and the user confirmed audio worked. No profile data was deleted. Account/token values were never read or recorded.
+- **Known blockers:** The lyric-display release blocker is cleared. The DOM filtered-index inconsistency was confirmed and fixed: empty rows are removed before assigning current/neighbor indexes, with focused coverage. Do not create `v0.1.0` without explicit user authorization.
+- **Execution gate:** Outward-facing tag/release still requires explicit user authorization. Review the working-tree commit boundary and complete release collateral first.
+- **Next exact action:** With Luna Medium, review the final diff and release collateral; prepare a conventional implementation commit only if the user requests it; do not tag without separate explicit authorization.
+- **Last updated:** 2026-07-12 — continuous synchronized lyric updates and audible Cider playback passed end-to-end.
 
 Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 
@@ -247,6 +252,7 @@ Rules:
 - Run the smallest relevant checks during a focused batch; run the full suite before phase completion or after broad cross-component changes.
 - Mark `blocked` only for a concrete external blocker.
 - Work continuously through the current task and its safe, in-scope follow-ups. Stop immediately only when the user requests it, an execution gate requires user intervention, or escalation to another model is warranted. On stopping, provide the required handoff and ready-to-copy continuation prompt.
+- When any information or decision is genuinely required from the user, use the agent's default user-input tool (`AskUserQuestion`) instead of stopping execution with a plain-text question.
 
 ### Disruptive execution gates
 

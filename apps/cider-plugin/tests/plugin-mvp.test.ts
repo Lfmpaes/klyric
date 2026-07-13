@@ -7,10 +7,10 @@ import {
   PluginStateMachine,
 } from "../src/application/PluginStateMachine";
 import {
-  LyricsSourceError,
   type LyricsDiscovery,
   type LyricsSource,
   type LyricsSourceContext,
+  LyricsSourceError,
   type RawLyricsSnapshot,
 } from "../src/cider/lyrics";
 import type {
@@ -149,6 +149,23 @@ class DelayedLyricsSource implements LyricsSource {
       currentLine: { text: "Sanitized line", index: 0 },
       currentIndex: 0,
     });
+  }
+
+  public async stop(): Promise<void> {}
+}
+
+class SilentLyricsSource implements LyricsSource {
+  public readonly kind = "dom" as const;
+  public readonly confidence = 60;
+  public available = false;
+  public starts = 0;
+
+  public async canStart(): Promise<boolean> {
+    return this.available;
+  }
+
+  public async start(): Promise<void> {
+    this.starts++;
   }
 
   public async stop(): Promise<void> {}
@@ -369,6 +386,75 @@ describe("plugin lifecycle", () => {
     await settled();
     expect(states).toHaveLength(stateCount);
     expect(lyrics.starts).toBe(2);
+  });
+
+  test("does not restart an active source before its first usable snapshot", async () => {
+    const playback = new ControllablePlayback();
+    const lyrics = new SilentLyricsSource();
+    const clock = new FakeRetryClock();
+    const discoveries: FakeDiscovery[] = [];
+    const plugin = new KLyricPlugin({
+      document: {} as Document,
+      playback,
+      createLyricsSources: () => [lyrics],
+      createLyricsDiscovery: (_, onAvailable) => {
+        const discovery = new FakeDiscovery(onAvailable);
+        discoveries.push(discovery);
+        return discovery;
+      },
+      lyricsRetryClock: clock,
+      lyricsRetryDelaysMs: [1],
+    });
+
+    await plugin.setup();
+    playback.emit("playing", "track-a");
+    lyrics.available = true;
+    clock.fireNext();
+    await settled();
+    await settled();
+
+    expect(lyrics.starts).toBe(1);
+    expect(clock.timers.size).toBe(0);
+    expect(discoveries).toHaveLength(1);
+    expect(discoveries[0]?.stops).toBe(1);
+    discoveries[0]?.trigger();
+    await settled();
+    expect(lyrics.starts).toBe(1);
+    await plugin.teardown();
+  });
+
+  test("uses browser retry timers without changing their receiver", () => {
+    const originalSetTimeout = globalThis.setTimeout;
+    const originalClearTimeout = globalThis.clearTimeout;
+    const expectedReceiver = undefined;
+
+    try {
+      globalThis.setTimeout = function () {
+        expect(this).toBe(expectedReceiver);
+        return 1 as unknown as ReturnType<typeof setTimeout>;
+      } as typeof setTimeout;
+      globalThis.clearTimeout = function () {
+        expect(this).toBe(expectedReceiver);
+      } as typeof clearTimeout;
+
+      const plugin = new KLyricPlugin();
+      const clock = (
+        plugin as unknown as {
+          lyricsRetryClock(): {
+            setTimeout(
+              callback: () => void,
+              delayMs: number,
+            ): ReturnType<typeof setTimeout>;
+            clearTimeout(timer: ReturnType<typeof setTimeout>): void;
+          };
+        }
+      ).lyricsRetryClock();
+      const timer = clock.setTimeout(() => undefined, 1);
+      clock.clearTimeout(timer);
+    } finally {
+      globalThis.setTimeout = originalSetTimeout;
+      globalThis.clearTimeout = originalClearTimeout;
+    }
   });
 
   test("retries unavailable sources while an active track is playing", async () => {

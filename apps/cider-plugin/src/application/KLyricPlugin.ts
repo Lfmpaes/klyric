@@ -271,6 +271,7 @@ export class KLyricPlugin {
       phase === "source-error" ||
       state.playbackStatus !== "playing" ||
       state.track === null ||
+      this.activeLyrics !== undefined ||
       state.hasLyrics ||
       state.lyricsKind !== "unavailable"
     ) {
@@ -296,6 +297,7 @@ export class KLyricPlugin {
       if (
         !this.started ||
         signal.aborted ||
+        this.activeLyrics !== undefined ||
         generation !== this.lyricsRetryGeneration ||
         factory !== this.lyricsFactory ||
         signal !== this.lyricsSignal
@@ -331,6 +333,7 @@ export class KLyricPlugin {
       phase === "source-error" ||
       state.playbackStatus !== "playing" ||
       state.track === null ||
+      this.activeLyrics !== undefined ||
       state.hasLyrics ||
       state.lyricsKind !== "unavailable"
     ) {
@@ -354,6 +357,7 @@ export class KLyricPlugin {
       if (
         !this.started ||
         signal.aborted ||
+        this.activeLyrics !== undefined ||
         generation !== this.lyricsRetryGeneration ||
         factory !== this.lyricsFactory ||
         signal !== this.lyricsSignal
@@ -374,8 +378,8 @@ export class KLyricPlugin {
   private lyricsRetryClock(): LyricsRetryClock {
     return (
       this.dependencies.lyricsRetryClock ?? {
-        setTimeout,
-        clearTimeout,
+        setTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
+        clearTimeout: (timer) => clearTimeout(timer),
       }
     );
   }

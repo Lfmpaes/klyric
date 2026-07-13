@@ -764,7 +764,22 @@ SHA-256 manifests, and `git diff --check`. Task 8.9 is partially complete:
 release notes, checksums, and limitations are prepared; one product-focused,
 privacy-safe screenshot remains before the final `v0.1.0` tag.
 
-### Cider delayed lyric discovery regression — 2026-07-12
+### Filtered DOM index correction — 2026-07-12
+
+Review confirmed that `DomLyricsSource` previously computed `currentIndex` from
+all matched DOM elements, then filtered empty rows from `lines`. When Cider
+contains an empty spacer row before the active line, this produced an index that
+could point at the wrong previous/current/next neighbors in the normalized state.
+The source now filters empty elements first and assigns contiguous indexes to the
+retained lines, keeping `currentLine`, `currentIndex`, and neighbor derivation
+aligned. A focused regression test covers an empty row before the active line.
+
+Validation passed: focused lyric/plugin tests (34 pass, 0 fail), changed-file
+Biome check, typecheck, build, and `git diff --check`. This was a real correctness
+issue and is no longer a release blocker; the fix remains uncommitted pending
+explicit commit authorization. Screenshot/release collateral and tagging remain
+separate gated work.
+
 
 A live report against Cider 3.1.8-1 found an open synchronized Lyrics view with
 `.lyric-view-content`, 43 `.lyric-line` elements, and one `.lyric-line.active`,
@@ -1084,3 +1099,216 @@ passed (28 pass, 0 fail); changed-file Biome format/lint, full typecheck/build,
 and `git diff --check` passed. The remaining failure is an unexplained live
 source callback lifecycle or DOM-read boundary. Escalate to GPT-5.6 Sol High for
 a structural DevTools diagnosis before changing implementation.
+
+### Installed-plugin provenance diagnosis — 2026-07-12
+
+The apparent post-`0204d5c` live callback loss did not exercise that implementation.
+DevTools inspection of the active Cider runtime found the removed
+`ignoreUnidentifiedLyrics` field set to `true` and no `lyricsSourceGeneration`
+field. The installed bundle at
+`~/.config/sh.cider.genten/plugins/dev.luizpaes.klyric/plugin.js` contains the old
+first-unidentified-snapshot heuristic, while the repository bundle contains the
+new generation/ownership guards. Their SHA-256 hashes differ (`30d1cbd...`
+installed versus `3c32411...` repository), and the installed file timestamp
+predates the current build.
+
+One controlled synchronized replacement traced the stale runtime structurally.
+`DomLyricsSource.start()` ran once and found the lyric container. It did not call
+its wrapped snapshot callback, and `PluginStateMachine.setLyrics()` was not
+called. The DOM subsequently held 61 `.lyric-line` elements and a nonempty active
+line while the old runtime retained `ignoreUnidentifiedLyrics: true`. This is
+consistent with the already-diagnosed and fixed old lifecycle behavior; it is not
+evidence that source-generation ownership rejected a live callback. No account
+data or tokens were collected or recorded.
+
+The exact validation loss boundary is therefore installation/runtime provenance:
+the prior live acceptance loaded a pre-fix plugin bundle, before the current
+source-generation path could be exercised. No source implementation was changed
+in this diagnosis batch. The smallest next action is operational and known-scope:
+build/package and install the current plugin, restart Cider with DevTools, verify
+that the active runtime exposes `lyricsSourceGeneration` and not
+`ignoreUnidentifiedLyrics`, then rerun the privacy-safe track-change acceptance.
+Instrument source start/snapshot and `setLyrics()` counts only if the current
+runtime still fails. Phase 8, release collateral commits, and tagging remain
+blocked until that current-build scenario proves a protocol-valid rendered
+current line. The separate broad filtered-index inconsistency remains out of
+scope.
+
+### Current-build live replacement revalidation — 2026-07-12
+
+The source-generation package was rebuilt and packaged, then installed through
+the established local release workflow after an explicitly authorized stop and
+restart of `klyric-bridge.service`. Cider was restarted with DevTools on port
+9222. Structural inspection of the active `KLyricPlugin` proved current-build
+provenance: the instance has a numeric `lyricsSourceGeneration` field and does
+not have `ignoreUnidentifiedLyrics`.
+
+Live validation used only the user's designated library tracks: “Play” by Dave
+Grohl as the no-lyrics source and “Ritual” by The Warning as the synchronized
+replacement. Lyrics was open. “Ritual” produced 43 `.lyric-line` elements and a
+nonempty active-line element. After restoring the untouched runtime methods and
+restarting lyric discovery, the plugin reached `playing-with-lyrics`; the bridge
+briefly exposed protocol version 1, `sourceKind: dom`, `lyricsKind:
+line-synced`, `hasLyrics: true`, present current line/index, and `stale: false`.
+This proves that the installed current source can deliver a DOM snapshot through
+the state machine and bridge.
+
+The required stable acceptance nevertheless failed. Subsequent synchronized
+replacement attempts returned the bridge to `lyricsKind: unavailable`,
+`hasLyrics: false`, absent current line/index, and stale state while the DOM still
+held 43 lines and an active line. The existing panel widget remained connected;
+a temporary `plasmawindowed` instance raised the client count from one to two,
+but no protocol-valid current line remained available when the rendered state
+was inspected, so rendered-current-line presence is not proven. Temporary
+instrumentation was removed; one initial counter wrapper used the wrong
+`LyricsSource.start(context)` signature, induced a source error, and its results
+were discarded before clean revalidation.
+
+Focused plugin tests passed (37 pass, 0 fail), `bun run verify` passed, and `git
+diff --check` passed. Build and packaging passed before installation. No lyric
+text, track metadata, account data, or tokens were printed or recorded. Phase 8,
+release collateral commits, and tagging remain blocked. The confirmed-current
+runtime now reproduces an unexplained intermittent DOM snapshot/replacement loss,
+so the next action requires GPT-5.6 Sol High with narrowly scoped instrumentation
+that preserves the actual `LyricsSourceContext` interface and traces DOM reads,
+snapshot delivery, state-machine acceptance, generation changes, and retry
+transitions during one clean “Play” → “Ritual” replacement.
+
+### Live DOM observer loss diagnosis and fix — 2026-07-12
+
+Narrow in-memory DevTools instrumentation preserved the real
+`LyricsSource.start(context)` signature and recorded only structural counters.
+The reproduced replacement ran one source restart/start and two source stops,
+performed DOM container/line reads, and reached 43 `.lyric-line` elements with
+one active line, but recorded zero snapshot callbacks and zero
+`PluginStateMachine.setLyrics()` calls. The active DOM source remained attached
+to the parent of the container that existed when it started. Cider later
+replaced that lyric-view subtree; because the observer target was detached, no
+mutation invoked `read()` against the new container. This explains the
+intermittency: a source started after the new view existed worked, while one
+retained across view replacement did not.
+
+`DomLyricsSource` now uses two observers. A document-root observer watches only
+`childList`/`subtree` changes and schedules a read only when
+`findLyricContainer()` returns a different element identity. A container-local
+observer retains the existing active-line attribute, character-data, and child
+mutation coverage. Rebinding disconnects the old container observer before
+observing the new parent. This avoids the initial implementation's microtask
+starvation, where the broad document observer continually scheduled itself in
+Cider's busy renderer and left `queued: true`. Both observers are disconnected
+and state is reset by idempotent `stop()`.
+
+A focused regression replaces the document's lyric-container identity after the
+source starts, fires only the document observer, and requires the replacement's
+initial active line to emit immediately while the old container observer is
+disconnected. The existing repeated-line test now verifies container-local
+mutations and both-observer cleanup. Focused lyric/plugin tests passed (29 pass,
+0 fail), changed-file Biome check, full `bun run typecheck`, `bun run build`,
+packaging, and `git diff --check` passed. The installed plugin hash matched the
+current build. Direct live source activation emitted one structural snapshot
+with 40 nonempty lines and present current line/index, called `setLyrics()` once,
+reached `playing-with-lyrics`, and produced bridge protocol v1 `line-synced`
+state with `hasLyrics: true`, a present current line/index, and `stale: false`.
+Temporary instrumentation was restored and removed after collection. No lyric
+text, track metadata, account data, or tokens were printed or recorded.
+
+The required unassisted clean replacement remains blocked by a separate boundary.
+During one clean “Play” → “Ritual” transition with Lyrics opened after selection,
+`DomLyricsDiscovery` reached `triggered: true`, disconnected its observer, and
+had no pending timer, but the plugin retained no active source and the trace
+recorded no discovery-driven `startLyrics()` call. Manually invoking that exact
+retained `onAvailable` callback immediately started the DOM source, emitted one
+snapshot, called `setLyrics()` once, and restored the valid state. This isolates
+the remaining loss between the discovery zero-delay timer callback and the
+plugin availability callback, rather than DOM selection, source read, generation
+ownership, state normalization, or bridge delivery.
+
+Phase 8, release collateral commits, and tagging remain blocked. The next Sol
+High action is to instrument `DomLyricsDiscovery` timer scheduling/delivery and
+its plugin callback during one clean replacement, explain how the timer clears
+without invoking `onAvailable`, add focused regression coverage and the minimal
+fix, then rerun unassisted source/bridge/widget acceptance. The separate broad
+filtered-index inconsistency remains out of scope.
+
+### Browser-timer receiver diagnosis and partial live acceptance — 2026-07-12
+
+The deferred discovery loss was caused by browser timer functions being copied
+onto environment objects and invoked as methods. In the active Cider renderer,
+a direct `setTimeout(callback, 0)` delivered, while
+`{ setTimeout }.setTimeout(callback, 0)` did not. The latter changes the receiver
+from the renderer global to the environment object. This exactly matched the
+observed discovery state: the container check triggered, the observer
+Disconnected, and no availability callback arrived. The same unsafe pattern
+also existed in the plugin's default bounded-retry clock.
+
+`DomLyricsDiscovery` and `KLyricPlugin` now expose receiver-safe environment
+wrappers that call global `setTimeout`/`clearTimeout` lexically. Regression tests
+replace the Bun global timer functions with receiver-sensitive fakes and require
+both discovery activation and retry scheduling/cancellation to invoke them
+without an environment-object receiver. Focused lyric/plugin tests passed (31
+pass, 0 fail), changed-file Biome check, full typecheck/build, and `git diff
+--check` passed.
+
+With the user's approval, the current build was installed directly into Cider;
+the installed and built bundle SHA-256 hashes matched. Live acceptance then
+started “Play” by Dave Grohl, closed Lyrics, and waited through all three retry
+attempts. The plugin retained a structural discovery observer with no lyric
+container. After switching to “Ritual” by The Warning and opening Lyrics, Cider
+remained responsive and, without manual callback invocation, exposed 43 lyric
+lines, one active line, and an active DOM source. The bridge published protocol
+version 1 with `lyricsKind: line-synced`, `sourceKind: dom`, `hasLyrics: true`, a
+present current line/index, and `stale: false`. This proves the fixed deferred
+discovery and bridge paths.
+
+The user requested a pause before conclusive widget evidence was captured. A
+temporary `plasmawindowed` instance and desktop screenshot did not establish
+rendered-current-line presence or a subsequent visible line change, and the
+temporary process was stopped. Live probes printed lyric and track content under
+the project's durable authorization; no account data or tokens were collected,
+and no live output was added to the repository. Phase 8 remains blocked only on
+running-widget observation of one current synchronized line and one later line
+change. Do not commit release collateral or tag `v0.1.0` until that passes.
+
+### Continuous lyric update fix and live acceptance — 2026-07-12
+
+Resumed live validation exposed two additional consequences of the receiver bug.
+First, once a DOM source activated before its first usable snapshot, the still
+unavailable state continued arming retry/discovery selection. Repeated source
+starts advanced `lyricsSourceGeneration` into the thousands, so later callbacks
+belonged to superseded generations and were rejected. Retry and discovery now
+stop when `activeLyrics` exists, and retained timer/discovery callbacks also
+refuse to start another source after activation. A focused silent-source
+regression proves an active source is started once and cannot be restarted by a
+previously retained discovery callback.
+
+Second, the live DOM source showed `lastIdentity: null` and `queued: true` while
+Cider had 43 lines and one active line. Like the timer APIs, `queueMicrotask` had
+been copied onto an environment object and invoked as a method. The initial
+synchronous read could publish one line, but every subsequent mutation queued a
+microtask that never delivered in Cider. `DomLyricsSource` now wraps the browser
+microtask function lexically. A receiver-sensitive regression requires a
+container-local active-line mutation to deliver a second snapshot through the
+browser environment.
+
+Focused lyric/plugin tests passed (33 pass, 0 fail), changed-file Biome check,
+full typecheck/build, and `git diff --check` passed. The final installed plugin
+SHA-256 matched the build. In live “Ritual” playback, source generation remained
+stable, the source queue cleared, and the bridge published protocol version 1
+`line-synced` state with `hasLyrics: true`, a present current line/index, and
+`stale: false`. Consecutive observed current indices advanced 3 → 5 → 6 → 8,
+and the user confirmed the widget lyrics updated perfectly instead of freezing
+on the first line.
+
+During validation, Cider's media element advanced unmuted at full application
+volume but PipeWire exposed no Cider output stream. A clean Cider restart was
+required. The original profile was not deleted or reset: Apple-domain cookies,
+local/session storage, IndexedDB, and the stored-token key remained present.
+Cider temporarily returned to OOBE with MusicKit unauthorized; the user restored
+authorization, and Cider was reopened with the same profile. It then created an
+uncorked, unmuted PipeWire output stream, while its media element advanced with
+volume 0.90233. The user confirmed audio and lyrics both worked. No credential,
+token, or account values were read or recorded.
+
+The release-blocking lyric behavior is cleared. The separate broad
+filtered-index inconsistency remains to be assessed before tagging. Release
+commit/tag actions remain outward-facing and require explicit user authorization.

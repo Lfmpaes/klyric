@@ -21,7 +21,7 @@ function browserEnvironment(documentRoot: Document): DomLyricsEnvironment {
   return {
     document: documentRoot,
     createObserver: (callback) => new MutationObserver(callback),
-    queueMicrotask,
+    queueMicrotask: (callback) => queueMicrotask(callback),
   };
 }
 
@@ -29,6 +29,7 @@ export class DomLyricsSource implements LyricsSource {
   readonly kind = "dom" as const;
   readonly confidence = 60;
   private observer: DomObserver | undefined;
+  private containerObserver: DomObserver | undefined;
   private queued = false;
   private lastIdentity: string | undefined;
 
@@ -51,26 +52,53 @@ export class DomLyricsSource implements LyricsSource {
     }
     let container: Element = initialContainer;
 
+    const observeContainer = (next: Element) => {
+      if (next === container && this.containerObserver !== undefined) return;
+      container = next;
+      this.containerObserver?.disconnect();
+      this.containerObserver = this.environment.createObserver(scheduleRead);
+      this.containerObserver.observe(container.parentElement ?? container, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        characterData: true,
+        attributeFilter: [
+          "aria-current",
+          "data-active",
+          "data-current",
+          "class",
+        ],
+      });
+    };
     const read = () => {
       this.queued = false;
-      container = findLyricContainer(this.environment.document) ?? container;
+      const nextContainer = findLyricContainer(this.environment.document);
+      if (nextContainer !== null) observeContainer(nextContainer);
       const active = findActiveLine(container);
       if (active === null) return;
       const elements = lyricElements(container);
-      const currentIndex = elements.indexOf(active);
-      const lines = elements.flatMap((element, index) => {
-        const line = lineFromElement(element, index);
-        return line === null ? [] : [line];
+      const linesWithElements = elements.flatMap((element) => {
+        const line = lineFromElement(element, 0);
+        return line === null ? [] : [{ element, line }];
       });
-      const currentLine = lineFromElement(active, Math.max(0, currentIndex));
+      const currentIndex = linesWithElements.findIndex(
+        ({ element }) => element === active,
+      );
+      const currentLine = linesWithElements[currentIndex]?.line ?? null;
       if (currentLine === null) return;
-      const identity = `${currentIndex}:${currentLine.text}`;
+      const lines = linesWithElements.map(({ line }, index) => ({
+        ...line,
+        index,
+      }));
+      const normalizedCurrentLine = lines[currentIndex] ?? null;
+      if (normalizedCurrentLine === null) return;
+      const identity = `${currentIndex}:${normalizedCurrentLine.text}`;
       if (identity === this.lastIdentity) return;
       this.lastIdentity = identity;
       context.onSnapshot({
         source: this.kind,
         lines,
-        currentLine,
+        currentLine: normalizedCurrentLine,
         currentIndex: currentIndex >= 0 ? currentIndex : null,
       });
     };
@@ -80,14 +108,17 @@ export class DomLyricsSource implements LyricsSource {
       this.environment.queueMicrotask(read);
     };
 
-    this.observer = this.environment.createObserver(scheduleRead);
-    this.observer.observe(container.parentElement ?? container, {
+    const scheduleContainerRead = () => {
+      const nextContainer = findLyricContainer(this.environment.document);
+      if (nextContainer !== null && nextContainer !== container) scheduleRead();
+    };
+
+    this.observer = this.environment.createObserver(scheduleContainerRead);
+    this.observer.observe(this.environment.document.documentElement, {
       subtree: true,
       childList: true,
-      attributes: true,
-      characterData: true,
-      attributeFilter: ["aria-current", "data-active", "data-current", "class"],
     });
+    observeContainer(container);
     context.signal.addEventListener("abort", () => void this.stop(), {
       once: true,
     });
@@ -97,6 +128,8 @@ export class DomLyricsSource implements LyricsSource {
   async stop(): Promise<void> {
     this.observer?.disconnect();
     this.observer = undefined;
+    this.containerObserver?.disconnect();
+    this.containerObserver = undefined;
     this.queued = false;
     this.lastIdentity = undefined;
   }

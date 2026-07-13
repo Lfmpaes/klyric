@@ -206,6 +206,47 @@ describe("DOM discovery", () => {
     expect(tasks.size).toBe(0);
   });
 
+  test("uses browser timers without changing their receiver", () => {
+    const originalMutationObserver = globalThis.MutationObserver;
+    const originalSetTimeout = globalThis.setTimeout;
+    const originalClearTimeout = globalThis.clearTimeout;
+    let available = 0;
+    let callback: (() => void) | undefined;
+    const expectedReceiver = undefined;
+
+    try {
+      globalThis.MutationObserver = class {
+        observe() {}
+        disconnect() {}
+        takeRecords(): MutationRecord[] {
+          return [];
+        }
+      } as unknown as typeof MutationObserver;
+      globalThis.setTimeout = function (scheduled) {
+        expect(this).toBe(expectedReceiver);
+        callback = scheduled as () => void;
+        return 1 as unknown as ReturnType<typeof setTimeout>;
+      } as typeof setTimeout;
+      globalThis.clearTimeout = function () {
+        expect(this).toBe(expectedReceiver);
+      } as typeof clearTimeout;
+
+      const documentRoot = {
+        documentElement: {} as Node,
+        querySelector: () => ({}) as Element,
+      } as unknown as Document;
+      const discovery = new DomLyricsDiscovery(documentRoot, () => available++);
+
+      discovery.start();
+      callback?.();
+      expect(available).toBe(1);
+    } finally {
+      globalThis.MutationObserver = originalMutationObserver;
+      globalThis.setTimeout = originalSetTimeout;
+      globalThis.clearTimeout = originalClearTimeout;
+    }
+  });
+
   test("cancels deferred activation when stopped", () => {
     let mutation = () => undefined;
     let available = 0;
@@ -242,6 +283,18 @@ describe("DOM discovery", () => {
 });
 
 describe("DOM adapter", () => {
+  function createContainer(text: string) {
+    const line = {
+      textContent: text,
+      getAttribute: () => null,
+    };
+    return {
+      parentElement: {} as Element,
+      querySelector: () => line,
+      querySelectorAll: () => [line],
+    } as unknown as Element;
+  }
+
   test("uses the selectors observed in Cider 3.1.8", () => {
     expect(observedCider318.playingWithLyricsOpen).toMatchObject({
       containerSelector: ".lyric-view-content",
@@ -251,10 +304,150 @@ describe("DOM adapter", () => {
     });
   });
 
-  test("emits active-line identity changes and disconnects its observer", async () => {
-    let activeIndex = 0;
+  test("uses browser microtasks without changing their receiver", async () => {
+    const originalMutationObserver = globalThis.MutationObserver;
+    const originalQueueMicrotask = globalThis.queueMicrotask;
     let mutation = () => undefined;
-    let disconnected = false;
+    let activeIndex = 0;
+    let queued: (() => void) | undefined;
+    const elements = ["first line", "second line"].map((text, index) => ({
+      textContent: text,
+      getAttribute: () => null,
+      index,
+    }));
+    const container = {
+      parentElement: {} as Element,
+      querySelector: () => elements[activeIndex],
+      querySelectorAll: () => elements,
+    } as unknown as Element;
+    const documentRoot = {
+      documentElement: {} as Node,
+      querySelector: () => container,
+    } as unknown as Document;
+    const snapshots: RawLyricsSnapshot[] = [];
+
+    try {
+      globalThis.MutationObserver = class {
+        constructor(callback: MutationCallback) {
+          mutation = () => callback([], this as unknown as MutationObserver);
+        }
+        observe() {}
+        disconnect() {}
+        takeRecords(): MutationRecord[] {
+          return [];
+        }
+      } as unknown as typeof MutationObserver;
+      globalThis.queueMicrotask = function (callback) {
+        expect(this).toBeUndefined();
+        queued = callback;
+      };
+
+      const source = new DomLyricsSource(documentRoot);
+      await source.start(context(snapshots));
+      expect(snapshots.at(-1)?.currentIndex).toBe(0);
+
+      activeIndex = 1;
+      mutation();
+      queued?.();
+      expect(snapshots.at(-1)?.currentIndex).toBe(1);
+      await source.stop();
+    } finally {
+      globalThis.MutationObserver = originalMutationObserver;
+      globalThis.queueMicrotask = originalQueueMicrotask;
+    }
+  });
+
+  test("follows a replaced lyric container after the original parent is detached", async () => {
+    let container = createContainer("first line");
+    const observers: Array<{
+      callback: MutationCallback;
+      disconnected: boolean;
+      target?: Node;
+      options?: MutationObserverInit;
+    }> = [];
+    const documentRoot = {
+      documentElement: {} as Node,
+      querySelector: () => container,
+    } as unknown as Document;
+    const snapshots: RawLyricsSnapshot[] = [];
+    const source = new DomLyricsSource(documentRoot, {
+      document: documentRoot,
+      createObserver(callback) {
+        const observer = { callback, disconnected: false };
+        observers.push(observer);
+        return {
+          observe(target, options) {
+            observer.target = target;
+            observer.options = options;
+          },
+          disconnect() {
+            observer.disconnected = true;
+          },
+        };
+      },
+      queueMicrotask: (callback) => callback(),
+    });
+
+    await source.start(context(snapshots));
+    expect(snapshots).toHaveLength(1);
+    expect(observers).toHaveLength(2);
+    expect(observers[0]?.target).toBe(documentRoot.documentElement);
+    expect(observers[0]?.options).toEqual({ childList: true, subtree: true });
+
+    container = createContainer("replacement line");
+    observers[0]?.callback([], {} as MutationObserver);
+
+    expect(observers).toHaveLength(3);
+    expect(observers[1]?.disconnected).toBe(true);
+    expect(snapshots).toHaveLength(2);
+    expect(snapshots[1]?.currentLine?.text).toBe("replacement line");
+
+    await source.stop();
+    expect(observers[0]?.disconnected).toBe(true);
+    expect(observers[2]?.disconnected).toBe(true);
+  });
+
+  test("keeps current and neighbor indexes aligned when empty DOM rows are filtered", async () => {
+    const activeIndex = 1;
+    const elements = ["", "Current line", "Next line"].map((text) => ({
+      textContent: text,
+      getAttribute: () => null,
+    }));
+    const container = {
+      querySelector: () => elements[activeIndex] ?? null,
+      querySelectorAll: () => elements,
+    };
+    const documentRoot = {
+      querySelector: () => container,
+    } as unknown as Document;
+    const snapshots: RawLyricsSnapshot[] = [];
+    const source = new DomLyricsSource(documentRoot, {
+      document: documentRoot,
+      createObserver() {
+        return { observe() {}, disconnect() {} };
+      },
+      queueMicrotask: (callback) => callback(),
+    });
+
+    await source.start(context(snapshots));
+
+    expect(snapshots[0]?.lines).toEqual([
+      { text: "Current line", index: 0, startTimeMs: 0 },
+      { text: "Next line", index: 1, startTimeMs: 0 },
+    ]);
+    expect(snapshots[0]?.currentIndex).toBe(0);
+    expect(snapshots[0]?.currentLine).toEqual({
+      text: "Current line",
+      index: 0,
+      startTimeMs: 0,
+    });
+    await source.stop();
+  });
+
+  test("emits active-line identity changes and disconnects its observers", async () => {
+    let activeIndex = 0;
+    const mutations: Array<() => void> = [];
+    let disconnected = 0;
     const elements = ["Repeated line", "Repeated line"].map((text, index) => ({
       textContent: text,
       getAttribute(name: string) {
@@ -272,11 +465,11 @@ describe("DOM adapter", () => {
     const source = new DomLyricsSource(documentRoot, {
       document: documentRoot,
       createObserver(callback) {
-        mutation = () => callback([], {} as MutationObserver);
+        mutations.push(() => callback([], {} as MutationObserver));
         return {
           observe() {},
           disconnect() {
-            disconnected = true;
+            disconnected++;
           },
         };
       },
@@ -288,12 +481,12 @@ describe("DOM adapter", () => {
     expect(snapshots[0]?.currentIndex).toBe(0);
 
     activeIndex = 1;
-    mutation();
+    mutations[1]?.();
     expect(snapshots[1]?.currentIndex).toBe(1);
     expect(snapshots[1]?.currentLine?.text).toBe("Repeated line");
 
     await source.stop();
-    expect(disconnected).toBe(true);
+    expect(disconnected).toBe(2);
   });
 });
 

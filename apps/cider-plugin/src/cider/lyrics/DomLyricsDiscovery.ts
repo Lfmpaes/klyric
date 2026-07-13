@@ -21,8 +21,8 @@ function browserEnvironment(
   return {
     document: documentRoot,
     createObserver: (callback) => new MutationObserver(callback),
-    setTimeout,
-    clearTimeout,
+    setTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
+    clearTimeout: (timer) => clearTimeout(timer),
   };
 }
 
