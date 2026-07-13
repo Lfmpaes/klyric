@@ -51,6 +51,26 @@ describe("KLyric state validation", () => {
     }
   });
 
+  test("accepts optional Cider lyric availability and panel fields", () => {
+    const parsed = parseKLyricState(validStateFixture, validationOptions);
+    expect(parsed.trackHasLyrics).toBe(true);
+    expect(parsed.lyricsPanelOpen).toBe(true);
+
+    const legacy = cloneFixture();
+    delete legacy.trackHasLyrics;
+    delete legacy.lyricsPanelOpen;
+    expect(parseKLyricState(legacy, validationOptions)).not.toHaveProperty(
+      "trackHasLyrics",
+    );
+
+    expectValidationFailure(() =>
+      parseKLyricState(
+        { ...validStateFixture, lyricsPanelOpen: "yes" },
+        validationOptions,
+      ),
+    );
+  });
+
   test("normalizes text while preserving intentional internal whitespace", () => {
     const state = cloneFixture();
     state.currentLine = { text: "  first\tsecond  " };

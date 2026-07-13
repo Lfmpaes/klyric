@@ -4,6 +4,8 @@ export interface PlaybackSnapshot {
   status: PlaybackStatus;
   track: TrackIdentity | null;
   positionMs?: number;
+  trackHasLyrics?: boolean;
+  lyricsPanelOpen?: boolean;
 }
 
 export interface PlaybackSourceContext {
@@ -144,6 +146,10 @@ export class PlaybackSource implements PlaybackObserver {
       status: normalizeStatus(music, this.audio, track),
       track,
     };
+    const trackHasLyrics = trackLyricsAvailability(music?.nowPlayingItem);
+    if (trackHasLyrics !== undefined) snapshot.trackHasLyrics = trackHasLyrics;
+    snapshot.lyricsPanelOpen =
+      this.environment.document.querySelector(".lyric-view-content") !== null;
     if (position !== undefined && position >= 0) {
       snapshot.positionMs = Math.round(position * 1_000);
     }
@@ -173,6 +179,17 @@ export function normalizeTrack(
     track.durationMs = Math.round(duration);
   if (artwork !== undefined) track.artworkUrl = artwork;
   return Object.keys(track).length > 0 ? track : null;
+}
+
+export function trackLyricsAvailability(
+  item: MusicKitItem | null | undefined,
+): boolean | undefined {
+  if (item === undefined || item === null) return undefined;
+  const attributes = item.attributes ?? {};
+  for (const key of ["hasLyrics", "hasTimeSyncedLyrics"] as const) {
+    if (typeof attributes[key] === "boolean") return attributes[key];
+  }
+  return undefined;
 }
 
 function normalizeStatus(

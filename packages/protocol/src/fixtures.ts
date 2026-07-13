@@ -22,6 +22,8 @@ export const validStateFixture: KLyricState = {
   previousLine: { text: "Previous fixture line", startTimeMs: 8_000, index: 2 },
   nextLine: { text: "Next fixture line", startTimeMs: 16_000, index: 4 },
   positionMs: 12_500,
+  trackHasLyrics: true,
+  lyricsPanelOpen: true,
   hasLyrics: true,
   stale: false,
 };

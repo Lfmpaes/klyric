@@ -331,6 +331,14 @@ export function parseKLyricState(
     state.positionMs,
     "positionMs",
   );
+  const trackHasLyrics = optionalBoolean(
+    state.trackHasLyrics,
+    "trackHasLyrics",
+  );
+  const lyricsPanelOpen = optionalBoolean(
+    state.lyricsPanelOpen,
+    "lyricsPanelOpen",
+  );
   const result: KLyricState = {
     protocolVersion: parseProtocolVersion(
       state.protocolVersion,
@@ -354,6 +362,8 @@ export function parseKLyricState(
     stale: asBoolean(state.stale, "stale"),
   };
   if (positionMs !== undefined) result.positionMs = positionMs;
+  if (trackHasLyrics !== undefined) result.trackHasLyrics = trackHasLyrics;
+  if (lyricsPanelOpen !== undefined) result.lyricsPanelOpen = lyricsPanelOpen;
   return result;
 }
 

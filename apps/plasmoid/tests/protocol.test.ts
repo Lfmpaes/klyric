@@ -59,6 +59,32 @@ test("the QML protocol helper accepts all shared bridge fixtures", () => {
   }
 });
 
+test("the QML protocol helper accepts optional Cider lyric state fields and legacy states", () => {
+  const protocol = loadProtocolLibrary();
+  const legacy = { ...validStateFixture } as Record<string, unknown>;
+  delete legacy.trackHasLyrics;
+  delete legacy.lyricsPanelOpen;
+
+  expect(
+    protocol.parseServerMessage(
+      JSON.stringify({ type: "state", payload: validStateFixture }),
+    )?.payload,
+  ).toMatchObject({ trackHasLyrics: true, lyricsPanelOpen: true });
+  expect(
+    protocol.parseServerMessage(
+      JSON.stringify({ type: "state", payload: legacy }),
+    ),
+  )?.not.toHaveProperty("trackHasLyrics");
+  expect(
+    protocol.parseServerMessage(
+      JSON.stringify({
+        type: "state",
+        payload: { ...validStateFixture, trackHasLyrics: "true" },
+      }),
+    ),
+  ).toBeNull();
+});
+
 test("the QML protocol helper rejects malformed messages and identifies incompatible bridges", () => {
   const protocol = loadProtocolLibrary();
   const invalidTrack = {

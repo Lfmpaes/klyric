@@ -143,6 +143,15 @@ function state(value) {
             return null
         result.positionMs = value.positionMs
     }
+    var optionalBooleans = ["trackHasLyrics", "lyricsPanelOpen"]
+    for (var i = 0; i < optionalBooleans.length; i++) {
+        var key = optionalBooleans[i]
+        if (value[key] !== undefined) {
+            if (typeof value[key] !== "boolean")
+                return null
+            result[key] = value[key]
+        }
+    }
     return result
 }
 

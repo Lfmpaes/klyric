@@ -17,7 +17,10 @@ import type {
   PlaybackObserver,
   PlaybackSourceContext,
 } from "../src/cider/PlaybackSource";
-import { normalizeTrack } from "../src/cider/PlaybackSource";
+import {
+  normalizeTrack,
+  trackLyricsAvailability,
+} from "../src/cider/PlaybackSource";
 import { BridgeClientError } from "../src/publisher/BridgeClient";
 
 class FakePlayback implements PlaybackObserver {
@@ -846,9 +849,40 @@ describe("plugin state machine", () => {
     });
     expect(states.at(-1)?.lyricsKind).toBe("instrumental");
   });
+  test("publishes optional track metadata and lyrics panel state", () => {
+    const states: RawState[] = [];
+    const machine = new PluginStateMachine({
+      sessionId: "panel-state-session",
+      onState: (_, state) => states.push(state),
+    });
+
+    machine.setConnected(true);
+    machine.setPlayback({
+      status: "playing",
+      track: { id: "track-a" },
+      trackHasLyrics: false,
+      lyricsPanelOpen: false,
+    });
+
+    expect(states.at(-1)).toMatchObject({
+      trackHasLyrics: false,
+      lyricsPanelOpen: false,
+      hasLyrics: false,
+    });
+  });
 });
 
 describe("playback normalization", () => {
+  test("reads Cider lyric availability metadata without inferring it", () => {
+    expect(trackLyricsAvailability({ attributes: { hasLyrics: true } })).toBe(
+      true,
+    );
+    expect(
+      trackLyricsAvailability({ attributes: { hasTimeSyncedLyrics: false } }),
+    ).toBe(false);
+    expect(trackLyricsAvailability({ attributes: {} })).toBeUndefined();
+  });
+
   test("maps observed MusicKit metadata to a safe protocol track", () => {
     expect(
       normalizeTrack({

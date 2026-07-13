@@ -41,6 +41,10 @@ export interface KLyricState {
   previousLine: LyricLine | null;
   nextLine: LyricLine | null;
   positionMs?: number;
+  /** Cider's per-track availability metadata, when the host exposes it. */
+  trackHasLyrics?: boolean;
+  /** Whether Cider's lyrics panel is currently present in the renderer DOM. */
+  lyricsPanelOpen?: boolean;
   hasLyrics: boolean;
   stale: boolean;
 }

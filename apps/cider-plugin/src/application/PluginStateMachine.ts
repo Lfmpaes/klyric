@@ -202,6 +202,10 @@ export class PluginStateMachine {
       hasLyrics,
       stale: this.lineStale,
     };
+    if (this.playback.trackHasLyrics !== undefined)
+      state.trackHasLyrics = this.playback.trackHasLyrics;
+    if (this.playback.lyricsPanelOpen !== undefined)
+      state.lyricsPanelOpen = this.playback.lyricsPanelOpen;
     if (this.playback.positionMs !== undefined)
       state.positionMs = this.playback.positionMs;
     return state;
