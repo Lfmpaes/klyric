@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KLyric — Synchronized Cider Lyrics for KDE Plasma</title>
+    <meta
+      name="description"
+      content="Display Cider’s active synchronized lyric line directly in your KDE Plasma 6 panel with a private, local-only bridge."
+    />
+    <meta name="theme-color" content="#131313" />
+    <link rel="canonical" href="https://klyric.luizpaes.dev/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="KLyric — Synchronized Cider Lyrics for KDE Plasma" />
+    <meta
+      property="og:description"
+      content="Display Cider’s active synchronized lyric line directly in your KDE Plasma 6 panel with a private, local-only bridge."
+    />
+    <meta property="og:url" content="https://klyric.luizpaes.dev/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="KLyric — Synchronized Cider Lyrics for KDE Plasma" />
+    <meta
+      name="twitter:description"
+      content="Display Cider’s active synchronized lyric line directly in your KDE Plasma 6 panel with a private, local-only bridge."
+    />
+    <link rel="icon" href="./assets/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="./" aria-label="KLyric home">
+          <svg class="brand-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M2 6 6 10 2 14" />
+            <path d="M13 5v8M13 5l4-1" />
+            <ellipse cx="11.5" cy="13.5" rx="2" ry="1.5" transform="rotate(-15 11.5 13.5)" />
+          </svg>
+          <span><span class="brand-accent">K</span>lyric</span>
+        </a>
+        <nav aria-label="Primary navigation">
+          <a href="https://github.com/Lfmpaes/klyric#documentation">Documentation</a>
+          <a href="https://github.com/Lfmpaes/klyric">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="shell main-inner">
+        <article class="terminal">
+          <div class="terminal-bar" aria-hidden="true">
+            <span class="window-controls"><i></i><i></i><i></i></span>
+            <span class="terminal-title">klyric.sh</span>
+          </div>
+
+          <div class="terminal-body">
+            <div class="hero-grid">
+              <section class="product-overview" aria-labelledby="hero-heading">
+                <svg class="product-icon" width="54" height="54" viewBox="0 0 54 54" aria-hidden="true">
+                  <rect x="1" y="1" width="52" height="52" rx="3" />
+                  <path d="M9 24l4 4-4 4m7 0h4" />
+                  <path d="M36 18v12m0-12 6-2" />
+                  <ellipse cx="34" cy="31" rx="3" ry="2" transform="rotate(-15 34 31)" />
+                  <path class="muted-stroke" d="M9 36h23M9 40h17" />
+                </svg>
+
+                <p class="eyebrow">KDE Plasma 6 × Cider</p>
+                <h1 id="hero-heading">Synchronized lyrics, right in your Plasma panel.</h1>
+                <p class="hero-copy">
+                  KLyric connects Cider to a lightweight KDE Plasma 6 widget, keeping the active lyric line visible
+                  without leaving your desktop. Everything stays on your machine.
+                </p>
+
+                <div class="cta-group">
+                  <a
+                    class="button button-primary"
+                    href="https://github.com/Lfmpaes/klyric/releases/latest"
+                    aria-label="Download latest KLyric release"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3" />
+                    </svg>
+                    Download latest release
+                  </a>
+                  <a
+                    class="button button-secondary"
+                    href="https://github.com/Lfmpaes/klyric"
+                    aria-label="View KLyric source code on GitHub"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.3 4 5 5 0 0 0 19.1.5S18 0 15 2a13.4 13.4 0 0 0-7 0C5-.1 3.9.5 3.9.5A5 5 0 0 0 3.7 4a5.4 5.4 0 0 0-1.5 3.7c0 5.4 3.5 6.6 6.8 7A4.8 4.8 0 0 0 8 18v4M8 19c-3 .9-3-1.5-4-2" />
+                    </svg>
+                    View on GitHub
+                  </a>
+                </div>
+
+                <a
+                  class="installation-link"
+                  href="https://github.com/Lfmpaes/klyric/blob/main/docs/installation.md"
+                  aria-label="Read the KLyric installation guide"
+                >
+                  Read the installation guide
+                  <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12h14m-5-5 5 5-5 5" />
+                  </svg>
+                </a>
+
+                <div class="badges">
+                  <span>Plasma 6</span>
+                  <span>Cider</span>
+                  <span>Local only</span>
+                  <span>MIT License</span>
+                  <small>v0.1.0</small>
+                </div>
+              </section>
+
+              <section class="preview-section" aria-labelledby="preview-heading">
+                <h2 id="preview-heading" class="technical-label">Plasma panel preview</h2>
+                <div class="plasma-preview">
+                  <div class="plasma-panel">
+                    <div class="mock-icons" aria-hidden="true"><i></i><i></i><i></i></div>
+                    <div class="panel-spacer"></div>
+                    <div class="panel-applet">
+                      <svg width="10" height="10" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M13 3v10m0-10 5-1" />
+                        <ellipse cx="11" cy="14" rx="3" ry="2" />
+                      </svg>
+                      <span>The city moves in perfect time</span>
+                    </div>
+                    <div class="panel-spacer"></div>
+                    <div class="system-tray" aria-hidden="true"><i></i><i></i><span>23:41</span></div>
+                  </div>
+
+                  <div class="desktop-area">
+                    <div class="lyric-popup">
+                      <div class="connection-status"><i></i><span>Connected locally</span></div>
+                      <div class="track-info">
+                        <strong>Midnight Signals</strong>
+                        <span>Demo Artist</span>
+                      </div>
+                      <div class="lyric-lines">
+                        <span class="lyric-muted">Signals fade across the wire</span>
+                        <strong>The city moves in perfect time</strong>
+                        <span>Where silence meets the neon light</span>
+                      </div>
+                      <div class="popup-note">Loopback bridge · No cloud connection</div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <section class="architecture" aria-label="Local architecture">
+              <ol>
+                <li>
+                  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                    <rect x="1" y="1" width="14" height="14" rx="2" /><path d="m5 8 3-3 3 3M8 5v6" />
+                  </svg>
+                  <span><strong>Cider plugin</strong><small>Reads the active line</small></span>
+                </li>
+                <li>
+                  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                    <rect x="1" y="1" width="14" height="14" rx="2" /><circle cx="8" cy="8" r="3" /><path d="M8 3v2m0 6v2" />
+                  </svg>
+                  <span><strong>Local bridge</strong><small>Keeps current state in memory</small></span>
+                </li>
+                <li>
+                  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                    <rect x="1" y="1" width="14" height="14" rx="2" /><rect x="3" y="3" width="10" height="4" rx="1" /><path d="M3 10h7m-7 2.5h5" />
+                  </svg>
+                  <span><strong>Plasma widget</strong><small>Renders it in your panel</small></span>
+                </li>
+              </ol>
+              <p>No account. No remote service. No lyric uploads.</p>
+            </section>
+          </div>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span>KLyric is released under the MIT License.</span>
+        <div>
+          <span>Built by <a href="https://luizpaes.dev">Luiz Paes</a></span>
+          <a href="https://github.com/Lfmpaes/klyric">Source code</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
