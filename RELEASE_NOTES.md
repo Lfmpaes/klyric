@@ -1,9 +1,8 @@
-# KLyric v0.1.0
+# KLyric v0.1.1
 
 KLyric displays Cider's active synchronized lyric line in a KDE Plasma 6 panel
-widget. This first release contains the local bridge, Cider plugin, Plasma
-widget, systemd user service, local installer, checksums, and an optional Arch
-`PKGBUILD`.
+widget. This update streamlines installation and improves the widget's playback
+states, tooltip, icon layout, and lyric popup.
 
 ## Highlights
 
@@ -13,6 +12,12 @@ widget, systemd user service, local installer, checksums, and an optional Arch
 - Automatic recovery across bridge, Plasma, plugin, suspend/resume, and
   full-session restart scenarios.
 - Local installation, upgrade, uninstall, and `--purge` workflows.
+- One-command latest-release installation with checksum verification.
+- An installed `klyric` command for updates, removal, version, and help.
+- A compact, configurable one-to-three-line lyric popup.
+- Clear italic states for no song, closed Lyrics panel, stopped Cider, and
+  unavailable bridge, plus an ellipsis between synchronized lines.
+- An always-visible alignment-aware music icon and track/artist tooltip.
 
 ## Compatibility and limitations
 

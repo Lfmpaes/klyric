@@ -20,6 +20,7 @@ Item {
     property string fontWeight: "normal"
     property bool animationsEnabled: true
     property bool verticalPanel: false
+    property var plasmoidItem: null
 
     readonly property bool iconVisible: true
     readonly property int iconOnlyWidth: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing * 2
@@ -42,6 +43,11 @@ Item {
     Layout.maximumHeight: verticalPanel ? (showText ? effectiveMaximumWidth : iconOnlyWidth) : implicitHeight
     Layout.fillHeight: !verticalPanel
     clip: true
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: compact.plasmoidItem.expanded = !compact.plasmoidItem.expanded
+    }
 
     Accessible.name: displayText
     Accessible.description: tooltipText

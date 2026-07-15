@@ -5,16 +5,15 @@ any panel automatically.
 
 ## Install a release
 
-Download and verify the release archive, then extract it:
+Install the latest GitHub Release with one command:
 
 ```bash
-sha256sum --check SHA256SUMS
-tar -xzf klyric-0.1.0.tar.gz
-cd klyric-0.1.0
-bun run install:local --source .
+curl -fsSL https://raw.githubusercontent.com/Lfmpaes/klyric/main/install.sh | bash
 ```
 
-The installer puts the bridge in `~/.local/bin`, installs the user unit in
+The bootstrap resolves the latest release, downloads its archive and published
+checksums, verifies SHA-256 integrity, and runs the bundled installer. The
+installer puts the bridge and `klyric` command in `~/.local/bin`, installs the user unit in
 `~/.config/systemd/user`, installs the Cider plugin, and upgrades the Plasma
 package. It retains timestamped backups under `~/.local/share/klyric/backups`.
 It honors `XDG_BIN_HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, and
@@ -32,13 +31,14 @@ panel edit mode.
 
 ## Upgrade and removal
 
-Run the same install command with a newer extracted release. The installer
-backs up replaced files and preserves `~/.config/klyric`, including the
-publisher token.
+Use the installed management command to update or remove KLyric. Updates back
+up replaced files and preserve `~/.config/klyric`, including the publisher
+token.
 
 ```bash
-bun run uninstall:local
-bun run uninstall:local --purge
+klyric update
+klyric uninstall
+klyric uninstall --purge
 ```
 
 The first command removes installed components but preserves settings. The

@@ -2119,6 +2119,16 @@ If no reliable method can obtain the active line:
 - Report that no implementation phase remains.
 - Do not begin future-work items.
 
+### v0.1.1 authorized maintenance addendum
+
+The user subsequently authorized a narrow v0.1.1 UX and distribution update.
+This does not reopen the v0.1.0 implementation phases or authorize future-work
+features. Scope is limited to the one-command release installer and management
+CLI, compact popup, permanent alignment-aware icon, track tooltip, polished
+italic playback/connection states, compatible Cider availability metadata,
+tests, documentation, and release validation. Publishing remains separately
+gated.
+
 ---
 
 ## 20. Suggested commit sequence

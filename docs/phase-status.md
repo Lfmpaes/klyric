@@ -1322,3 +1322,100 @@ token, or account values were read or recorded.
 The release-blocking lyric behavior is cleared. The separate broad
 filtered-index inconsistency remains to be assessed before tagging. Release
 commit/tag actions remain outward-facing and require explicit user authorization.
+
+### v0.1.1 UX and distribution maintenance — 2026-07-12
+
+The user authorized a focused v0.1.1 maintenance release after v0.1.0. Commits
+`3dc8cd0`, `5b1088a`, `bf0c4d6`, and `f6c5382` added the release bootstrap and
+management CLI, optional protocol-v1 Cider availability fields, and the initial
+widget UX overhaul. Work resumed from `docs/v0.1.1-IMPLEMENTATION-HANDOFF.md`.
+
+The remaining widget state semantics now reset cached lyric and publisher state
+at every bridge socket boundary, preventing stale lyrics or a stale Cider
+presence flag after bridge restart. Focused formatting coverage exercises the
+current lyric, closed Lyrics panel, between-line ellipsis, explicit no-lyrics,
+instrumental, stopped/no-track, publisher-disconnected, bridge-disconnected,
+and backward-compatible legacy payload states. All non-lyric display results
+remain marked for italic rendering.
+
+The installer now uses asset URLs returned by the configured GitHub-compatible
+release API instead of reconstructing github.com URLs. Disposable tests cover
+package creation, clean install, repeat install with token preservation,
+launcher-based version/help, launcher self-uninstall, purge, release API asset
+download, checksum verification, extraction, and clean archive installation.
+The CLI catches command errors and reports usage without a Bun stack trace.
+
+Validation passed: root format and lint (72 files), typecheck, full build,
+package creation, outer and inner checksum verification, QML lint, diff check,
+and the unrestricted full suite (88 pass, 0 fail). The initial sandboxed suite
+failed only because local TCP listeners are prohibited; rerunning with approved
+loopback access passed. No external GitHub release, installed user component,
+tag, or remote branch was changed. Runtime Plasma/Cider verification and final
+review/commit boundaries remain pending.
+
+Live installation then exposed two defects not reproduced by the original fake
+service shims. First, writing the new bridge binary directly over its running
+inode failed with Linux `ETXTBSY`. Bridge installation now writes and chmods a
+same-directory temporary executable and atomically renames it into place; the
+disposable lifecycle test keeps the old bridge executable running during the
+repeat install. Second, `systemctl enable --now` did not restart an already
+active v0.1.0 bridge, so that old process stripped v0.1.1 optional protocol
+fields. Installation now enables and explicitly restarts the service, and the
+test records and asserts both systemd calls.
+
+After packaging and installing the corrected artifacts, Cider was launched with
+remote debugging under the project's standing authorization. The redacted
+inspector selected “Ritual” by The Warning and opened Lyrics. Cider exposed 43
+lines and an active index; the bridge published synchronized current/previous/
+next lines with `trackHasLyrics: true` and `lyricsPanelOpen: true`. Closing
+Lyrics published `lyricsPanelOpen: false`. That live state revealed retained
+`currentLine` text still outranked the requested panel-closed message, so widget
+formatting now gives the explicit closed-panel condition precedence, with a
+regression containing a retained current line.
+
+Final unrestricted validation passed after these fixes: format and lint (72
+files), typecheck, full tests (88 pass, 0 fail, 476 expectations), build,
+package, QML lint, and diff check. All temporary `plasmoidviewer` processes were
+closed at the user's request. Final popup resizing, alignment, and tooltip
+runtime evidence remains before the v0.1.1 maintenance batch is complete.
+
+### v0.1.1 runtime UX continuation — 2026-07-13
+
+The focused installed-applet validation found and corrected three Plasma 6
+integration defects before the requested popup configuration matrix could be
+completed. First, Plasma's configuration host writes `cfg_<key>` and
+`cfg_<key>Default` initial properties to a configuration page. The original
+page bound controls directly through `plasmoid.configuration` and did not
+declare those properties, so Plasma rejected its configuration initialization;
+the popup then appeared inert. `configGeneral.qml` now declares both the active
+settings and compatibility-only properties for retired persisted keys. Second,
+the compact representation did not explicitly toggle the `PlasmoidItem`
+`expanded` state. It now receives a root reference and uses a full-area click
+handler to toggle that state, which is the Plasma 6 compact-representation
+pattern. Third, a first attempt to make the longer settings page scroll nested
+a `ScrollView` inside `KCM.SimpleKCM`. KDE's installed `SimpleKCM.qml` warns
+that nested scroll views are unsupported; the final implementation instead
+makes the form's direct child a `Flickable`, allowing SimpleKCM to adopt it as
+its own viewport.
+
+Each package upgrade and Plasma Shell restart was explicitly approved. After
+the final KCM-native repair, the user confirmed the General page loads and
+wheel/trackpad scrolling reaches its lower controls. After the click handler
+repair and a Plasma Shell reload, the user confirmed the popup opens. It
+briefly displayed `KLyric bridge unavailable` during the first applet
+reconnect, then recovered when the next bridge snapshot arrived. The bridge
+health check reported `status: ok`, protocol version 1, a live publisher,
+available state, and one WebSocket client. With “Ritual” by The Warning playing
+and Cider Lyrics open, the user confirmed the default popup settles to
+previous/current/next rows (three rows total) with no blank reserved space.
+No account details or tokens were read or recorded.
+
+Focused verification passed: `bun test apps/plasmoid/tests/protocol.test.ts`
+(7 pass, 61 expectations at the final KCM structure), `qmllint` over the
+affected widget QML, and `git diff --check`. The full-suite/release checks and
+final diff review have not been repeated after these runtime fixes. The user
+explicitly paused work before changing any popup setting. The exact resume
+point is the two-row scenario: in Configure KLyric → Popup content, uncheck
+**Show previous lyric line**, Apply, close the dialog, reopen the popup after
+reconnect, and verify it resizes to current/next rows only. Do not push, tag,
+or publish.

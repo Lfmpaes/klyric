@@ -12,7 +12,7 @@
     },
     "apps/bridge": {
       "name": "@klyric/bridge",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "bin": {
         "klyric-bridge": "./src/index.ts",
       },
@@ -22,22 +22,22 @@
     },
     "apps/cider-plugin": {
       "name": "@klyric/cider-plugin",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@klyric/protocol": "workspace:*",
       },
     },
     "apps/plasmoid": {
       "name": "@klyric/plasmoid",
-      "version": "0.1.0",
+      "version": "0.1.1",
     },
     "packages/protocol": {
       "name": "@klyric/protocol",
-      "version": "0.1.0",
+      "version": "0.1.1",
     },
     "packages/test-utils": {
       "name": "@klyric/test-utils",
-      "version": "0.1.0",
+      "version": "0.1.1",
     },
   },
   "packages": {

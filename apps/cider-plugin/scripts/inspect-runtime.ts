@@ -25,6 +25,8 @@ const target = targets.find(
 );
 if (target === undefined) throw new Error("No Cider renderer target found");
 const researchAction = process.env.CIDER_RESEARCH_ACTION ?? "inspect";
+const researchTrack =
+  process.env.CIDER_RESEARCH_TRACK ?? "Bohemian Rhapsody Queen";
 
 const expression = `(async () => {
   const plugin = await import('/plugins/dev.luizpaes.klyric/plugin.js?phase1-research=2');
@@ -83,7 +85,7 @@ const expression = `(async () => {
   let actionResult = 'not-requested';
   if (${JSON.stringify(researchAction)} === 'play-test') {
     try {
-      const search = await music?.api?.search?.('Bohemian Rhapsody Queen', {
+      const search = await music?.api?.search?.(${JSON.stringify(researchTrack)}, {
         types: ['songs'], limit: 1
       });
       const item = search?.songs?.data?.[0];

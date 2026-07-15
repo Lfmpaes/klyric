@@ -28,10 +28,23 @@ curl -fsSL \
 tag="$(bun -e 'const value = await Bun.file(process.argv[1]).json(); if (typeof value.tag_name !== "string") process.exit(1); process.stdout.write(value.tag_name)' "$release_json")"
 version="${tag#v}"
 archive="klyric-$version.tar.gz"
-asset_base="https://github.com/$REPOSITORY/releases/download/$tag"
+asset_urls="$(bun -e '
+const value = await Bun.file(process.argv[1]).json()
+const names = [process.argv[2], "SHA256SUMS"]
+for (const name of names) {
+  const asset = value.assets?.find((candidate) => candidate?.name === name)
+  if (typeof asset?.browser_download_url !== "string") process.exit(1)
+  console.log(asset.browser_download_url)
+}
+' "$release_json" "$archive")" || {
+  printf '%s\n' "The latest KLyric release is missing its archive or checksums." >&2
+  exit 1
+}
+archive_url="$(printf '%s\n' "$asset_urls" | sed -n '1p')"
+checksums_url="$(printf '%s\n' "$asset_urls" | sed -n '2p')"
 
-curl -fsSL "$asset_base/$archive" -o "$workdir/$archive"
-curl -fsSL "$asset_base/SHA256SUMS" -o "$workdir/SHA256SUMS"
+curl -fsSL "$archive_url" -o "$workdir/$archive"
+curl -fsSL "$checksums_url" -o "$workdir/SHA256SUMS"
 (
   cd "$workdir"
   sha256sum --check SHA256SUMS

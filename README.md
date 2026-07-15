@@ -7,7 +7,7 @@ The Cider plugin reads the active synchronized lyric line, a local bridge keeps
 only the current state in memory, and the widget renders it in your panel.
 Everything stays on your machine.
 
-![KLyric in KDE Plasma](docs/klyric-empty-state.png)
+![KLyric demo in KDE Plasma](docs/KLyric_demo.gif)
 
 <!-- Add product screenshots here when available.
 
@@ -40,19 +40,16 @@ compatibility limitation and is documented in the [integration matrix](docs/inte
 
 ## Installation
 
-Download the release archive from the project's Releases page, verify its
-checksum, extract it, and run the local installer:
+Install or upgrade the latest release with one command:
 
 ```bash
-sha256sum --check SHA256SUMS
-tar -xzf klyric-0.1.0.tar.gz
-cd klyric-0.1.0
-bun run install:local --source .
+curl -fsSL https://raw.githubusercontent.com/Lfmpaes/klyric/main/install.sh | bash
 ```
 
-The installer installs the bridge, systemd user service, Cider plugin, and
-Plasma widget for the current user. It does not modify system files or add a
-widget to a panel automatically.
+The bootstrap downloads the latest GitHub Release, verifies its checksum, and
+installs the bridge, systemd user service, Cider plugin, Plasma widget, and
+`klyric` management command for the current user. It does not modify system
+files or add a widget to a panel automatically.
 
 For the complete installation, upgrade, uninstall, and troubleshooting guide,
 see [docs/installation.md](docs/installation.md).
@@ -78,19 +75,22 @@ stopped, Cider is disconnected, or the current track has no lyrics.
 
 ## Updating and uninstalling
 
-Install a newer release over the existing installation using the same command.
-KLyric keeps the bridge token and creates backups of replaced user files.
-
-To remove KLyric while preserving settings:
+Update to the latest release while preserving settings and backups:
 
 ```bash
-bun run uninstall:local
+klyric update
+```
+
+Remove KLyric while preserving settings:
+
+```bash
+klyric uninstall
 ```
 
 To remove the application and its settings, including the publisher token:
 
 ```bash
-bun run uninstall:local --purge
+klyric uninstall --purge
 ```
 
 ## Privacy and security

@@ -1,4 +1,4 @@
-import { access, chmod, cp, mkdir, rm } from "node:fs/promises";
+import { access, chmod, cp, mkdir, rename, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { copyFile, run } from "./release-utils";
@@ -80,6 +80,20 @@ async function backup(path: string, destination: string): Promise<void> {
   if (await exists(path)) await cp(path, destination, { recursive: true });
 }
 
+async function replaceExecutable(
+  source: string,
+  destination: string,
+): Promise<void> {
+  const temporary = `${destination}.new-${process.pid}`;
+  try {
+    await copyFile(source, temporary);
+    await chmod(temporary, 0o755);
+    await rename(temporary, destination);
+  } finally {
+    await rm(temporary, { force: true });
+  }
+}
+
 export async function installLocal(options: InstallOptions): Promise<void> {
   const paths = localPaths();
   const required = [
@@ -120,18 +134,24 @@ export async function installLocal(options: InstallOptions): Promise<void> {
     backup(paths.plasmoid, join(backupRoot, "plasmoid")),
   ]);
 
-  await copyFile(join(options.source, "klyric-bridge"), paths.bridge);
-  await chmod(paths.bridge, 0o755);
+  await replaceExecutable(join(options.source, "klyric-bridge"), paths.bridge);
   await rm(paths.managedRoot, { force: true, recursive: true });
   await mkdir(paths.managedRoot, { recursive: true });
-  await cp(join(options.source, "scripts"), join(paths.managedRoot, "scripts"), {
-    recursive: true,
-  });
+  await cp(
+    join(options.source, "scripts"),
+    join(paths.managedRoot, "scripts"),
+    {
+      recursive: true,
+    },
+  );
   await copyFile(
     join(options.source, "package.json"),
     join(paths.managedRoot, "package.json"),
   );
-  await copyFile(join(options.source, "install.sh"), join(paths.managedRoot, "install.sh"));
+  await copyFile(
+    join(options.source, "install.sh"),
+    join(paths.managedRoot, "install.sh"),
+  );
   await Bun.write(
     paths.cli,
     `#!/bin/sh\nexec bun "${join(paths.managedRoot, "scripts", "klyric.ts")}" "$@"\n`,
@@ -163,13 +183,8 @@ export async function installLocal(options: InstallOptions): Promise<void> {
     join(options.source, `klyric-plasmoid-${RELEASE_VERSION}.plasmoid`),
   ]);
   await run(["systemctl", "--user", "daemon-reload"]);
-  await run([
-    "systemctl",
-    "--user",
-    "enable",
-    "--now",
-    "klyric-bridge.service",
-  ]);
+  await run(["systemctl", "--user", "enable", "klyric-bridge.service"]);
+  await run(["systemctl", "--user", "restart", "klyric-bridge.service"]);
   if (process.env.KLYRIC_INSTALL_SKIP_HEALTHCHECK !== "1") {
     await verifyBridgeHealth();
   }

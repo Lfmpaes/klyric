@@ -19,6 +19,7 @@ PlasmoidItem {
     property string bridgeVersion: ""
     property string bridgeError: ""
     property bool helloReceived: false
+    property bool ciderConnected: false
     property var pendingStoppedState: null
 
     // Plasma 6 exposes applet settings through the Plasmoid singleton. The
@@ -33,7 +34,14 @@ PlasmoidItem {
     readonly property bool showTextInCompact: !verticalPanel || configuration.verticalTextEnabled
 
     function updateDisplayText() {
-        displayResult = Formatting.displayResult(lyricState, configuration, connectionState)
+        displayResult = Formatting.displayResult(lyricState, configuration, connectionState, ciderConnected)
+    }
+
+    function clearObservedState() {
+        stopClearTimer.stop()
+        pendingStoppedState = null
+        lyricState = null
+        ciderConnected = false
     }
 
     function isLoopbackHost(host) {
@@ -60,6 +68,7 @@ PlasmoidItem {
         protocolCompatible = true
         helloReceived = false
         bridgeError = ""
+        clearObservedState()
         connectionState = "connecting"
         socket.active = true
         updateDisplayText()
@@ -104,6 +113,7 @@ PlasmoidItem {
             return
         }
         if (message.type === "state") {
+            ciderConnected = true
             if (message.payload.playbackStatus === "stopped" && configuration.clearDelayMs > 0
                     && lyricState !== null && lyricState.playbackStatus !== "stopped") {
                 pendingStoppedState = message.payload
@@ -118,6 +128,8 @@ PlasmoidItem {
             return
         }
         if (message.type === "state-cleared") {
+            if (message.reason === "publisher-disconnected")
+                ciderConnected = false
             stopClearTimer.stop()
             pendingStoppedState = null
             lyricState = null
@@ -150,6 +162,7 @@ PlasmoidItem {
         animationsEnabled: root.configuration.animationsEnabled
         tooltipText: root.tooltipText
         verticalPanel: root.verticalPanel
+        plasmoidItem: root
     }
 
     fullRepresentation: FullRepresentation {
@@ -210,6 +223,7 @@ PlasmoidItem {
                 stableConnectionTimer.restart()
             } else if (status === WebSocket.Closed) {
                 stableConnectionTimer.stop()
+                root.clearObservedState()
                 // QtWebSockets keeps `active` true after a failed connection.
                 // Clear it before the retry timer fires so assigning true in
                 // connectToBridge() starts a fresh socket instead of becoming

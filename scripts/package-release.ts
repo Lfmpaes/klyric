@@ -71,7 +71,12 @@ for (const filename of [
     join(releaseScripts, filename),
   );
 }
-for (const filename of ["install.sh", "LICENSE", "README.md", "RELEASE_NOTES.md"]) {
+for (const filename of [
+  "install.sh",
+  "LICENSE",
+  "README.md",
+  "RELEASE_NOTES.md",
+]) {
   await copyFile(join(root, filename), join(staging, filename));
 }
 await Bun.write(

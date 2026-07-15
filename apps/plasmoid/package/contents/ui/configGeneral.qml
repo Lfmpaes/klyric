@@ -1,19 +1,90 @@
 import QtQuick
 import QtQuick.Controls
 import org.kde.kirigami as Kirigami
+import org.kde.kcmutils as KCM
 
-Kirigami.FormLayout {
+KCM.SimpleKCM {
     id: page
 
-    property bool loopbackHost: plasmoid.configuration.bridgeHost === "127.0.0.1"
-                              || plasmoid.configuration.bridgeHost === "::1"
-                              || plasmoid.configuration.bridgeHost === "localhost"
+    property alias cfg_bridgeHost: bridgeHost.text
+    property string cfg_bridgeHostDefault
+    property alias cfg_bridgePort: bridgePort.value
+    property int cfg_bridgePortDefault
+    property alias cfg_reconnectEnabled: reconnectEnabled.checked
+    property bool cfg_reconnectEnabledDefault
+    property alias cfg_showConnectionStatus: showConnectionStatus.checked
+    property bool cfg_showConnectionStatusDefault
+    property alias cfg_fontSizeAdjustment: fontSizeAdjustment.value
+    property int cfg_fontSizeAdjustmentDefault
+    property string cfg_fontWeight
+    property string cfg_fontWeightDefault
+    property alias cfg_maximumWidth: maximumWidth.value
+    property int cfg_maximumWidthDefault
+    property alias cfg_minimumWidth: minimumWidth.value
+    property int cfg_minimumWidthDefault
+    property int cfg_visibleLines
+    property int cfg_visibleLinesDefault
+    property string cfg_alignment
+    property string cfg_alignmentDefault
+    property alias cfg_showTrackFallback: showTrackFallback.checked
+    property bool cfg_showTrackFallbackDefault
+    property alias cfg_verticalTextEnabled: verticalTextEnabled.checked
+    property bool cfg_verticalTextEnabledDefault
+    property alias cfg_hideWhenStopped: hideWhenStopped.checked
+    property bool cfg_hideWhenStoppedDefault
+    property alias cfg_hideWhenUnavailable: hideWhenUnavailable.checked
+    property bool cfg_hideWhenUnavailableDefault
+    property alias cfg_animationsEnabled: animationsEnabled.checked
+    property bool cfg_animationsEnabledDefault
+    property alias cfg_showPreviousLine: showPreviousLine.checked
+    property bool cfg_showPreviousLineDefault
+    property alias cfg_showNextLine: showNextLine.checked
+    property bool cfg_showNextLineDefault
+    property alias cfg_instrumentalText: instrumentalText.text
+    property string cfg_instrumentalTextDefault
+    property alias cfg_noLyricsText: noLyricsText.text
+    property string cfg_noLyricsTextDefault
+    property string cfg_pausedBehavior
+    property string cfg_pausedBehaviorDefault
+    property alias cfg_clearDelayMs: clearDelayMs.value
+    property int cfg_clearDelayMsDefault
+    property alias cfg_showConnectionBadge: showConnectionBadge.checked
+    property bool cfg_showConnectionBadgeDefault
+
+    // Keep the configuration dialog compatible with persisted settings from
+    // earlier KLyric packages while deliberately ignoring retired controls.
+    property bool cfg_expanding
+    property bool cfg_expandingDefault
+    property int cfg_length
+    property int cfg_lengthDefault
+    property bool cfg_showActiveSource
+    property bool cfg_showActiveSourceDefault
+    property bool cfg_showLastUpdateAge
+    property bool cfg_showLastUpdateAgeDefault
+    property bool cfg_showMusicIcon
+    property bool cfg_showMusicIconDefault
+    property bool cfg_tooltipDetailsEnabled
+    property bool cfg_tooltipDetailsEnabledDefault
+
+    property bool loopbackHost: cfg_bridgeHost === "127.0.0.1"
+                              || cfg_bridgeHost === "::1"
+                              || cfg_bridgeHost === "localhost"
+
+    Flickable {
+        id: flickable
+        contentWidth: width
+        contentHeight: form.implicitHeight
+        clip: true
+        flickableDirection: Flickable.VerticalFlick
+
+        Kirigami.FormLayout {
+            id: form
+            width: parent.width
 
     TextField {
+        id: bridgeHost
         Kirigami.FormData.label: i18n("Bridge host:")
-        text: plasmoid.configuration.bridgeHost
         placeholderText: "127.0.0.1"
-        onTextChanged: plasmoid.configuration.bridgeHost = text.trim()
     }
 
     Label {
@@ -25,147 +96,132 @@ Kirigami.FormLayout {
     }
 
     SpinBox {
+        id: bridgePort
         Kirigami.FormData.label: i18n("Bridge port:")
         from: 1
         to: 65535
-        value: plasmoid.configuration.bridgePort
-        onValueModified: plasmoid.configuration.bridgePort = value
     }
 
     CheckBox {
+        id: reconnectEnabled
         Kirigami.FormData.label: i18n("Connection")
         text: i18n("Reconnect automatically")
-        checked: plasmoid.configuration.reconnectEnabled
-        onToggled: plasmoid.configuration.reconnectEnabled = checked
     }
 
     CheckBox {
+        id: showConnectionStatus
         text: i18n("Show connection status in the panel")
-        checked: plasmoid.configuration.showConnectionStatus
-        onToggled: plasmoid.configuration.showConnectionStatus = checked
     }
 
     SpinBox {
+        id: fontSizeAdjustment
         Kirigami.FormData.label: i18n("Appearance")
         textFromValue: function(value) { return i18n("Font size adjustment: %1", value) }
         from: -6
         to: 12
-        value: plasmoid.configuration.fontSizeAdjustment
-        onValueModified: plasmoid.configuration.fontSizeAdjustment = value
     }
 
     ComboBox {
         Kirigami.FormData.label: i18n("Font weight:")
         model: [i18n("Normal"), i18n("Medium"), i18n("Bold")]
-        currentIndex: plasmoid.configuration.fontWeight === "bold" ? 2 : plasmoid.configuration.fontWeight === "medium" ? 1 : 0
-        onActivated: function(index) { plasmoid.configuration.fontWeight = ["normal", "medium", "bold"][index] }
+        currentIndex: page.cfg_fontWeight === "bold" ? 2 : page.cfg_fontWeight === "medium" ? 1 : 0
+        onActivated: function(index) { page.cfg_fontWeight = ["normal", "medium", "bold"][index] }
     }
 
     SpinBox {
+        id: maximumWidth
         Kirigami.FormData.label: i18n("Maximum width:")
         from: 80
         to: 1200
-        value: plasmoid.configuration.maximumWidth
-        onValueModified: plasmoid.configuration.maximumWidth = value
     }
 
     SpinBox {
+        id: minimumWidth
         Kirigami.FormData.label: i18n("Minimum width:")
         from: 0
         to: 800
-        value: plasmoid.configuration.minimumWidth
-        onValueModified: plasmoid.configuration.minimumWidth = value
     }
 
     ComboBox {
         Kirigami.FormData.label: i18n("Visible lyric lines:")
         model: [i18n("One"), i18n("Two")]
-        currentIndex: plasmoid.configuration.visibleLines === 2 ? 1 : 0
-        onActivated: function(index) { plasmoid.configuration.visibleLines = index + 1 }
+        currentIndex: page.cfg_visibleLines === 2 ? 1 : 0
+        onActivated: function(index) { page.cfg_visibleLines = index + 1 }
     }
 
     ComboBox {
         Kirigami.FormData.label: i18n("Alignment:")
         model: [i18n("Left"), i18n("Center"), i18n("Right")]
-        currentIndex: plasmoid.configuration.alignment === "center" ? 1 : plasmoid.configuration.alignment === "right" ? 2 : 0
-        onActivated: function(index) { plasmoid.configuration.alignment = ["left", "center", "right"][index] }
+        currentIndex: page.cfg_alignment === "center" ? 1 : page.cfg_alignment === "right" ? 2 : 0
+        onActivated: function(index) { page.cfg_alignment = ["left", "center", "right"][index] }
     }
 
     CheckBox {
+        id: showTrackFallback
         text: i18n("Show title and artist when lyrics are unavailable")
-        checked: plasmoid.configuration.showTrackFallback
-        onToggled: plasmoid.configuration.showTrackFallback = checked
     }
 
     CheckBox {
+        id: verticalTextEnabled
         text: i18n("Use text in vertical panels")
-        checked: plasmoid.configuration.verticalTextEnabled
-        onToggled: plasmoid.configuration.verticalTextEnabled = checked
     }
 
     CheckBox {
+        id: hideWhenStopped
         text: i18n("Hide when playback is stopped")
-        checked: plasmoid.configuration.hideWhenStopped
-        onToggled: plasmoid.configuration.hideWhenStopped = checked
     }
 
     CheckBox {
+        id: hideWhenUnavailable
         text: i18n("Hide when Cider is unavailable")
-        checked: plasmoid.configuration.hideWhenUnavailable
-        onToggled: plasmoid.configuration.hideWhenUnavailable = checked
     }
 
     CheckBox {
+        id: animationsEnabled
         text: i18n("Use subtle text transitions")
-        checked: plasmoid.configuration.animationsEnabled
-        onToggled: plasmoid.configuration.animationsEnabled = checked
     }
 
     CheckBox {
+        id: showPreviousLine
         Kirigami.FormData.label: i18n("Popup content")
         text: i18n("Show previous lyric line")
-        checked: plasmoid.configuration.showPreviousLine
-        onToggled: plasmoid.configuration.showPreviousLine = checked
     }
 
     CheckBox {
+        id: showNextLine
         text: i18n("Show next lyric line")
-        checked: plasmoid.configuration.showNextLine
-        onToggled: plasmoid.configuration.showNextLine = checked
     }
 
     TextField {
+        id: instrumentalText
         Kirigami.FormData.label: i18n("Instrumental text:")
-        text: plasmoid.configuration.instrumentalText
-        onTextChanged: plasmoid.configuration.instrumentalText = text
     }
 
     TextField {
+        id: noLyricsText
         Kirigami.FormData.label: i18n("No-lyrics text:")
-        text: plasmoid.configuration.noLyricsText
-        onTextChanged: plasmoid.configuration.noLyricsText = text
     }
 
     ComboBox {
         Kirigami.FormData.label: i18n("When paused:")
         model: [i18n("Keep current line"), i18n("Show track fallback")]
-        currentIndex: plasmoid.configuration.pausedBehavior === "track-fallback" ? 1 : 0
-        onActivated: function(index) { plasmoid.configuration.pausedBehavior = index === 1 ? "track-fallback" : "keep-line" }
+        currentIndex: page.cfg_pausedBehavior === "track-fallback" ? 1 : 0
+        onActivated: function(index) { page.cfg_pausedBehavior = index === 1 ? "track-fallback" : "keep-line" }
     }
 
     SpinBox {
+        id: clearDelayMs
         Kirigami.FormData.label: i18n("Clear delay after stop (ms):")
         from: 0
         to: 10000
         stepSize: 250
-        value: plasmoid.configuration.clearDelayMs
-        onValueModified: plasmoid.configuration.clearDelayMs = value
     }
 
     CheckBox {
+        id: showConnectionBadge
         Kirigami.FormData.label: i18n("Diagnostics")
         text: i18n("Show connection badge")
-        checked: plasmoid.configuration.showConnectionBadge
-        onToggled: plasmoid.configuration.showConnectionBadge = checked
+    }
+    }
     }
 }

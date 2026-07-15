@@ -1,18 +1,30 @@
-function displayResult(state, configuration, connectionState) {
+function displayResult(state, configuration, connectionState, ciderConnected) {
     if (state && state.playbackStatus === "paused" && configuration.pausedBehavior === "track-fallback")
-        return { text: trackText(state, configuration) || i18n("Waiting for Cider"), isLyric: false }
+        return { text: trackText(state, configuration) || i18n("No Song Playing"), isLyric: false }
+
+    if (state && state.playbackStatus === "playing" && state.lyricsPanelOpen === false)
+        return { text: i18n("Open the Lyrics Panel in Cider"), isLyric: false }
 
     if (state && state.currentLine && state.currentLine.text)
         return { text: state.currentLine.text, isLyric: true }
 
+    if (state && state.playbackStatus === "playing" && state.trackHasLyrics === true)
+        return { text: "…", isLyric: false }
+
     if (state && state.trackHasLyrics === false)
         return { text: configuration.noLyricsText || i18n("Lyrics unavailable"), isLyric: false }
+
+    if (state && state.lyricsKind === "instrumental")
+        return { text: configuration.instrumentalText || i18n("Instrumental"), isLyric: false }
 
     if (state && state.playbackStatus === "playing")
         return { text: "…", isLyric: false }
 
-    if (state && state.lyricsKind === "instrumental")
-        return { text: configuration.instrumentalText || i18n("Instrumental"), isLyric: false }
+    if (state && (state.playbackStatus === "stopped" || !state.track))
+        return { text: i18n("No Song Playing"), isLyric: false }
+
+    if (connectionState === "connected" && ciderConnected === false)
+        return { text: i18n("Cider Is Not Running"), isLyric: false }
 
     if (state && (state.lyricsKind === "unsynced" || state.lyricsKind === "unavailable"))
         return { text: configuration.noLyricsText || i18n("Lyrics unavailable"), isLyric: false }
@@ -21,13 +33,13 @@ function displayResult(state, configuration, connectionState) {
     if (track)
         return { text: track, isLyric: false }
     return {
-        text: connectionState === "connected" ? i18n("Waiting for Cider") : i18n("KLyric bridge unavailable"),
+        text: connectionState === "connected" ? i18n("Cider Is Not Running") : i18n("KLyric bridge unavailable"),
         isLyric: false
     }
 }
 
-function fallbackText(state, configuration, connectionState) {
-    return displayResult(state, configuration, connectionState).text
+function fallbackText(state, configuration, connectionState, ciderConnected) {
+    return displayResult(state, configuration, connectionState, ciderConnected).text
 }
 
 function trackText(state, configuration) {
