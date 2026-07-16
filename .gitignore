@@ -1,4 +1,5 @@
 node_modules/
+.vercel/
 dist/
 coverage/
 .DS_Store
@@ -8,3 +9,10 @@ coverage/
 *.log
 apps/cider-plugin/.cider/
 apps/plasmoid/package/contents/config/*.conf
+
+# Local agent state and worktrees
+/.claude/
+
+# Temporary website design inputs
+/PROMPT.md
+/design-reference/
