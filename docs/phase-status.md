@@ -1322,3 +1322,24 @@ token, or account values were read or recorded.
 The release-blocking lyric behavior is cleared. The separate broad
 filtered-index inconsistency remains to be assessed before tagging. Release
 commit/tag actions remain outward-facing and require explicit user authorization.
+
+### Post-release clean-runner CI repair — 2026-07-16
+
+GitHub Actions failed in `tests/packaging-workflows.test.ts` because the
+disposable installation test prepended command shims to `process.env.PATH`, but
+`Bun.which()` continued using its original executable search path. KDE developer
+machines masked the defect by providing a real `kpackagetool6`; the Ubuntu
+runner correctly reported that the installation environment lacked
+`kpackagetool6`.
+
+`checkEnvironment()` now accepts an environment mapping and passes its `PATH`
+explicitly to `Bun.which()`. A deterministic regression uses a nonexistent
+search path and verifies that all required commands are reported unavailable;
+the existing disposable installation test proves that runtime shims are found.
+
+Focused environment and installation tests passed. Full typecheck passed, the
+full suite passed outside the loopback-restricted sandbox (83 pass, 0 fail),
+build passed, changed-file Biome passed, and `git diff --check` passed. The fix
+was committed as `3a612cc` and pushed to `main`. GitHub Actions run
+`29503092301` passed lint, typecheck, all tests, and build on a clean Ubuntu
+runner. The pre-existing local `.gitignore` edit was excluded from both commits.

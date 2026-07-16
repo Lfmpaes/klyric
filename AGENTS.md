@@ -36,14 +36,14 @@ Update this section once after a meaningful implementation or validation batch, 
 - **Recommended next model:** GPT-5.6 Luna
 - **Reasoning:** Low
 - **Escalation:** None
-- **Last completed task:** Prepared release collateral, passed the full release validation suite, committed the final fixes, and created local tag `v0.1.0`
-- **Last verified implementation commit:** `27887a0` — stabilize live lyric discovery and indexing
+- **Last completed task:** Fixed the clean-runner packaging test failure by making executable discovery honor the supplied runtime `PATH`; pushed the fix to `main` and confirmed GitHub CI passed
+- **Last verified implementation commit:** `3a612cc` — honor runtime executable search path
 - **Open pull request:** None — PR #1 merged into `main` at `c7d43ab`.
-- **Last validation:** The root failures were all receiver/ownership related. In Cider, browser `setTimeout` and `queueMicrotask` functions copied to environment objects did not deliver when called as methods. Receiver-safe lexical wrappers now cover discovery timers, retry timers, and DOM mutation microtasks. The plugin also stops retry/discovery selection while a source is active and guards already-retained callbacks, preventing generation churn that invalidated later snapshots. Focused lyric/plugin tests passed (34 pass, 0 fail), changed-file Biome check, full typecheck/build, full test suite (82 pass, 0 fail), package build, and `git diff --check` passed. The installed bundle hash matched the build. Live playback with “Ritual” produced stable source generation and bridge protocol v1 `line-synced`, `hasLyrics: true`, present current line/index, and `stale: false`; consecutive indices advanced 3 → 5 → 6 → 8 while the user confirmed the widget lyrics updated correctly. A stale Electron audio session initially exposed no Cider PipeWire stream; after a clean restart and user reauthorization, Cider used the intact original profile, created an unmuted PipeWire output stream, and the user confirmed audio worked. No profile data was deleted. Account/token values were never read or recorded.
+- **Last validation:** GitHub Actions run `29503092301` passed all CI steps on clean Ubuntu after commit `3a612cc`. Locally, the focused environment and installation regressions passed, typecheck passed, the full suite passed (83 pass, 0 fail) outside the loopback-restricted sandbox, build passed, changed-file Biome passed, and `git diff --check` passed. Repository-wide local Biome remained obstructed only by ignored `.claude/worktrees` nested root configurations; the clean GitHub lint step passed.
 - **Known blockers:** The lyric-display release blocker is cleared. The DOM filtered-index inconsistency was confirmed and fixed: empty rows are removed before assigning current/neighbor indexes, with focused coverage. Do not create `v0.1.0` without explicit user authorization.
 - **Execution gate:** Outward-facing tag/release still requires explicit user authorization. Review the working-tree commit boundary and complete release collateral first.
-- **Next exact action:** With Luna Medium, review the final diff and release collateral; prepare a conventional implementation commit only if the user requests it; do not tag without separate explicit authorization.
-- **Last updated:** 2026-07-12 — continuous synchronized lyric updates and audible Cider playback passed end-to-end.
+- **Next exact action:** No implementation task remains; preserve the release state and investigate only a new user-reported defect.
+- **Last updated:** 2026-07-16 — clean-runner packaging CI failure fixed and GitHub CI passed on `main`.
 
 Allowed statuses: `pending`, `in_progress`, `blocked`, `complete`.
 
