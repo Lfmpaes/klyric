@@ -6,12 +6,18 @@ export interface EnvironmentCheck {
   readonly detail: string;
 }
 
-export function checkEnvironment(): readonly EnvironmentCheck[] {
-  const checks = REQUIRED_COMMANDS.map((command) => ({
-    name: command,
-    passed: Bun.which(command) !== null,
-    detail: Bun.which(command) === null ? "not found" : "available",
-  }));
+export function checkEnvironment(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): readonly EnvironmentCheck[] {
+  const checks = REQUIRED_COMMANDS.map((command) => {
+    const available =
+      Bun.which(command, { PATH: environment.PATH ?? "" }) !== null;
+    return {
+      name: command,
+      passed: available,
+      detail: available ? "available" : "not found",
+    };
+  });
   checks.push({
     name: "Linux",
     passed: process.platform === "linux",
@@ -19,8 +25,8 @@ export function checkEnvironment(): readonly EnvironmentCheck[] {
   });
   checks.push({
     name: "Plasma session",
-    passed: Boolean(process.env.XDG_CURRENT_DESKTOP?.includes("KDE")),
-    detail: process.env.XDG_CURRENT_DESKTOP ?? "not detected",
+    passed: Boolean(environment.XDG_CURRENT_DESKTOP?.includes("KDE")),
+    detail: environment.XDG_CURRENT_DESKTOP ?? "not detected",
   });
   return checks;
 }

@@ -10,6 +10,7 @@ import {
   uninstallLocal,
   verifyBridgeHealth,
 } from "../scripts/local-installation";
+import { checkEnvironment } from "../scripts/verify-environment";
 
 let releaseQueue: Promise<void> = Promise.resolve();
 
@@ -49,6 +50,21 @@ test("installer accepts explicit artifact sources and uninstall accepts only pur
   expect(parseUninstallOptions([])).toBe(false);
   expect(parseUninstallOptions(["--purge"])).toBe(true);
   expect(() => parseUninstallOptions(["--force"])).toThrow();
+});
+
+test("environment checks honor the supplied executable search path", () => {
+  const checks = checkEnvironment({
+    PATH: `/tmp/klyric-missing-path-${crypto.randomUUID()}`,
+    XDG_CURRENT_DESKTOP: "KDE",
+  });
+
+  expect(
+    checks
+      .filter((check) =>
+        ["kpackagetool6", "systemctl", "unzip"].includes(check.name),
+      )
+      .every((check) => !check.passed),
+  ).toBe(true);
 });
 
 test(
