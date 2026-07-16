@@ -61,8 +61,8 @@ paths, and verifies the bridge and Cider plugin are installed.
 
 ## Release materials
 
-- [Privacy-safe KLyric empty-state screenshot](klyric-empty-state.png)
-- [Release notes](../RELEASE_NOTES.md)
-- [Installation and troubleshooting](installation.md)
-- [Integration matrix and limitations](integration-testing.md)
-- [Bridge security and protocol behavior](bridge.md)
+- [Privacy-safe KLyric empty-state screenshot](../../klyric-empty-state.png)
+- [Release notes](../../../RELEASE_NOTES.md)
+- [Installation and troubleshooting](../../installation.md)
+- [Runtime testing and compatibility](../../testing.md)
+- [Bridge security and protocol behavior](../../bridge.md)

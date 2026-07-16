@@ -2,7 +2,7 @@
 
 ## Result
 
-Phase 1 tested Cider 3.1.8 on Linux with an authenticated Apple Music session.
+Live research tested Cider 3.1.8 on Linux with an authenticated Apple Music session.
 The only proven synchronized-line source is Cider's rendered lyric DOM. Cider
 does not expose a documented PluginKit lyric API, a discoverable lyric Pinia
 store, or a complete timed-line array in the inspected renderer state.
@@ -86,7 +86,7 @@ fail-closed normalization and cleanup; it is not claimed as an observed Cider
 3.1.8 shape. The observed fixture contains only selectors, booleans, counts,
 and mechanism names.
 
-## Phase 6 compatibility revalidation
+## Compatibility revalidation
 
 Live revalidation on 2026-07-11 used Cider 3.1.8-1. A synchronized catalog
 track again exposed 79 ordered DOM lines, pause/resume held playback time, a
